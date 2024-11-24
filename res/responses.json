@@ -1,0 +1,40 @@
+{
+    "root": {
+        "phrase": "Bonjour ! Pour commencer, veuillez saluer avec 'bonjour'.",
+        "responses": {
+            ">INTRO": {
+            	"keywords": "bonjour|bonsoir",
+                "phrase": "{TAILNUM} Bonjour, quelles sont vos intentions ?",
+                "audio": "[say_intentions]",
+                "readback": "",
+                "responses": {
+                    ">TOUR_DE_PISTE": {
+                    	"keywords": "(tour|tours)&(piste|pistes)&(parking|parkings)",
+                        "phrase": "{TAILNUM} Visibilité {VISIBILITY}, QNH {QNH}, vendu du {WINDDIR} {WINDSPEED} noeuds, piste en service {RUNWAY}. Rappelez au point d'attente {HOLDPOINT}",
+                        "audio": "[parameters]",
+                        "readback": "(rappel|rappelle)&point&attente",
+                        "responses": {
+                            ">POINT_ATTENTE": {
+                            	"keywords": "point|attente",
+                                "phrase": "Veuillez attendre au point d'attente."
+                            },
+                            ">ERREUR": {
+                            	"keywords": "erreur|erreurs|trompé|tromper|trompez|trompée|trompées",
+                            	"phrase": "Ok je vous écoute",
+                            	"goto": ">INTRO"
+                            }
+                        }
+                    },
+                    ">AU_REVOIR": {
+                    	"keywords": "revoir",
+                        "phrase": "Au revoir ! Passez une bonne journée !"
+                    }
+                }
+            }
+        }
+    },
+    "default": {
+    	"keywords": "default",
+        "phrase": "Je ne suis pas sûr de comprendre. Pouvez-vous reformuler ?"
+    }
+}

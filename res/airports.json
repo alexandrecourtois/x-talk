@@ -1,0 +1,20 @@
+{
+    "LFOQ": {
+        "latitude": 47.6785011,
+        "longitude": 1.20884,
+        "altitude": 121,
+        "tower": 118455,
+        "atis": 0,
+        "runways": "12,30,02,20",
+        "holdpoints": "charlie,alpha,alpha,alpha"
+    },
+    "LFOT": {
+        "latitude": 47.4347,
+        "longitude": 0.7175,
+        "altitude": 109,
+        "tower": 124400,
+        "atis": 0,
+        "runways": "02,20",
+        "holdpoints": "delta,alpha"        
+    }
+}
