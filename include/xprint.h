@@ -1,7 +1,7 @@
 #ifndef XPRINTF_H
 #define XPRINTF_H
 
-#include <sstream>
+#include <string>
 #include "globals.h"
 
 
@@ -65,38 +65,44 @@
 #define H_DOUBLE  "═"  // Horizontal Line
 #define V_DOUBLE  "║"  // Vertical Line
 
-enum XType {
-    M_DEFAULT,
-    M_INIT,
-    M_DONE,
-    M_REQU,
-    M_ERROR,
-    M_WARNING,
-    M_HELP,
-    M_INFO,
-    M_INVITE,
-    M_CLEAN,
-    M_USER,
-    M_USER_ALT,
-    M_XTALK,
-    M_XTALK_ALT,
-    M_BLINK_BEGIN,
-    M_BLINK_END,
-    M_ENDL
+class OUT {
+    private:
+        static std::string __LAST_COLOR;
+
+        OUT() = default;
+
+    public:
+        enum class BOX_STYLE {
+            SIMPLE,
+            DOUBLE
+        };
+
+        enum class MSG_STYLE {
+            DEFAULT,
+            INIT,
+            DONE,
+            REQU,
+            ERROR,
+            WARNING,
+            HELP,
+            INFO,
+            INVITE,
+            CLEAN,
+            USER,
+            USER_ALT,
+            XTALK,
+            XTALK_ALT,
+            BLINK_BEGIN,
+            BLINK_END,
+            ENDL,
+            CMD
+        };
+
+        static const std::string& get_LAST_COLOR();
+        static std::string xprint(MSG_STYLE style = MSG_STYLE::DEFAULT, std::string msg = "", std::string ext = "", log4cpp::Category* logger = xlog);
+        static void xprintbox(BOX_STYLE style, std::string text, std::string bcolor = WHITE, std::string tcolor = WHITE);
+
+        friend class IN;
 };
-
-#define SIMPLE      5
-#define DOUBLE      6
-
-extern std::string LAST_COLOR;
-
-template <typename T> std::string to_string(const T& value) {
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
-}
-
-void xprint(XType type = M_DEFAULT, std::string msg = "", std::string ext = "", log4cpp::Category* logger = xlog);
-void xprintbox(char type, std::string text, std::string bcolor = WHITE, std::string tcolor = WHITE);
 
 #endif

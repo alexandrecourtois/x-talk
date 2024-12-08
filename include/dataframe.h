@@ -1,30 +1,7 @@
 #ifndef DATAFRAME_H
 #define DATAFRAME_H
 
-#include <atomic>
-#include <tuple>
-
-extern struct Dataframe {
-    int xp_major;
-    int xp_minor;
-    
-    char tailnum[256];
-    
-    float visibility;
-    float qnh;
-    float windspeed;
-    float winddir;
-    float latitude;
-    float longitude;
-    int com1_freq;
-    int com2_freq;
-    float com1_vol;
-    float com2_vol;
-    int com1_active;
-    int com2_active;
-
-    auto operator <=>(const Dataframe&) const = default;
-} dataframe;
+#include <compare>
 
 extern struct Location {
     double latitude;

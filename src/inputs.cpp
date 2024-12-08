@@ -1,17 +1,19 @@
-#include "xscan.h"
+#include <SDL2/SDL_joystick.h>
+#include <tools.h>
+#include <inputs.h>
 #include <iostream>
+#include <ostream>
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-#include "ptt.h"
-#include <chrono>
 #include <thread>
-#include "xprint.h"
+#include <xprint.h>
 #include <utf8.h>
-#include "globals.h"
+#include <audio.h>
+#include <session.h>
 
-void disableInput() {
+void IN::disableInput() {
     struct termios t;
     tcgetattr(STDIN_FILENO, &t);
     t.c_lflag &= ~ICANON; // Mode non canonique : saisie immédiate sans Entrée
@@ -19,7 +21,7 @@ void disableInput() {
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
-void enableInput() {
+void IN::enableInput() {
     struct termios t;
     tcgetattr(STDIN_FILENO, &t);
     t.c_lflag |= ICANON; // Réactiver le mode canonique
@@ -29,22 +31,19 @@ void enableInput() {
     tcflush(STDIN_FILENO, TCIFLUSH);
 }
 
-struct termios oldt, newt;
-
-char kbhit() {
-    //struct termios oldt, newt;
+char IN::kbhit(bool in_xscan) {
     int ch;
     bool ret = false;
 
     // Sauvegarder les paramètres du terminal
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
+    tcgetattr(STDIN_FILENO, &__old_term);
+    __new_term = __old_term;
 
     // Passer en mode non-canonique (entrée immédiate sans avoir besoin de presse "Entrée")
-    newt.c_lflag &= ~(ICANON | ECHO);  // Désactiver le mode canonique (pas besoin d'Entrée pour valider)
-    newt.c_cc[VMIN] = 1;        // Lecture d'un caractère à la fois
-    newt.c_cc[VTIME] = 0;       // Pas de délai
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Appliquer les nouveaux paramètres
+    __new_term.c_lflag &= ~(ICANON | ECHO);  // Désactiver le mode canonique (pas besoin d'Entrée pour valider)
+    __new_term.c_cc[VMIN] = 1;        // Lecture d'un caractère à la fois
+    __new_term.c_cc[VTIME] = 0;       // Pas de délai
+    tcsetattr(STDIN_FILENO, TCSANOW, &__new_term);  // Appliquer les nouveaux paramètres
 
     // Passer le descripteur de fichier en mode non-bloquant
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK); 
@@ -56,12 +55,13 @@ char kbhit() {
     }
 
     // Restaurer les paramètres du terminal
-    //tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    if (!in_xscan)
+        tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
 
     return ret;  // Retourne true si un caractère est disponible
 }
 
-bool isUtf8Character(const std::string& str) {
+bool IN::__isUtf8Character(const std::string& str) {
     try {
         auto it = str.begin();
         while (it != str.end()) {
@@ -76,7 +76,7 @@ bool isUtf8Character(const std::string& str) {
     return false;
 }
 
-bool isLastCharacterASCII(const std::string& str) {
+bool IN::__isLastCharacterASCII(const std::string& str) {
     if (str.empty()) {
         return false;  // La chaîne est vide, pas de dernier caractère
     }
@@ -115,7 +115,7 @@ bool isLastCharacterASCII(const std::string& str) {
     return false;  // Si c'est un octet invalide
 }
 
-void xscan(std::string &str, void (*callback)(), int delay) {
+void IN::xscan(std::string &str, void (*callback)(), int delay) {
     std::string input;
     char ch;
     auto last_time = std::chrono::steady_clock::now();
@@ -133,7 +133,7 @@ void xscan(std::string &str, void (*callback)(), int delay) {
             }
         }
         
-        if (kbhit()) {  // Si un caractère est disponible
+        if (kbhit(true)) {  // Si un caractère est disponible
             ch = getchar();  // Lire le caractère
             
             // Détection et suppression des séquences de flèches
@@ -148,25 +148,25 @@ void xscan(std::string &str, void (*callback)(), int delay) {
                 if (!input.empty()) {
                     //containsUtf8(input);
                     //do {
-                        if (!isLastCharacterASCII(input))
+                        if (!__isLastCharacterASCII(input))
                             input.pop_back();
                             
                         input.pop_back();  // Supprimer le dernier caractère
                     //} while (!input.empty() && !isStartOfUtf8Char(input.back()));
                     
-                    std::cout << RESET << "\b " << LAST_COLOR << "\b" << std::flush;  // Effacer le dernier caractère affiché
+                    std::cout << RESET << "\b " << OUT::__LAST_COLOR << "\b" << std::flush;  // Effacer le dernier caractère affiché
                 }
             } else if (ch == '\n') {  // Si la touche Entrée est appuyée
                 std::cout << std::endl;
                 break;  // Quitter la boucle
             } else {
-                if (!recording) {
+                if (!AUDIO::isRecording()) {
                     input.push_back(ch);  // Ajouter le caractère à l'entrée
                     std::cout << ch << std::flush;  // Afficher le caractère saisi
                 }
             }
             
-            tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+            tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
         }
         
         usleep(1000);
@@ -177,8 +177,106 @@ void xscan(std::string &str, void (*callback)(), int delay) {
     str = input;
 }
 
-std::string garbage;
-
-void xscan() {
-    xscan(garbage);
+void IN::xscan_anykey() {
+    while(!kbhit()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
+    }
 }
+
+void IN::xscan() {
+    xscan(__garbage);
+}
+
+bool IN::ptt_changed() {
+    SDL_Event event;
+    
+    while(SDL_PollEvent(&event)) { };
+    
+    int ptt_state = SDL_JoystickGetButton(__joystick, __ptt_button);
+    
+    if (ptt_state != __prev_ptt_state) {
+        std::cout << std::endl << std::flush;
+        __prev_ptt_state = ptt_state;
+        return true;
+    }
+    
+    return false;
+}
+
+bool IN::ptt_pushed() {
+    if (!SESSION::no_joystick) {
+        SDL_Event event;
+    
+        while(SDL_PollEvent(&event)) { };
+    
+        return SDL_JoystickGetButton(__joystick, __ptt_button);
+    }
+    
+    return false;
+}
+
+void IN::selectJoystick() {
+    SDL_Init(SDL_INIT_JOYSTICK);
+    
+    OUT::xprint(OUT::MSG_STYLE::INIT, "Listing available devices");
+    
+    int numJoysticks = SDL_NumJoysticks();
+
+    if (numJoysticks == 0) {
+        printf("No device found.\n");
+    }
+    
+    std::cout << std::endl;
+    
+    for (int i = 0; i < numJoysticks; ++i) {
+        const char *joystickName = SDL_JoystickNameForIndex(i);
+        if (joystickName) {
+            OUT::xprint(OUT::MSG_STYLE::REQU, std::to_string(i), joystickName);
+        } else {
+            printf("%d : Unknown name\n", i);
+        }
+    }
+    
+    int joystickIndex;
+    bool selected = false;
+    
+    if (numJoysticks) {
+        joystickIndex = TOOLBOX::selectById(numJoysticks);
+
+        // Ouvrir le joystick sélectionné
+        __joystick = SDL_JoystickOpen(joystickIndex);
+        if (__joystick == NULL) {
+            fprintf(stderr, "Impossible d'ouvrir le joystick %d : %s\n", joystickIndex, SDL_GetError());
+        }
+
+        OUT::xprint(OUT::MSG_STYLE::INIT, "Selecting device", SDL_JoystickName(__joystick));
+        OUT::xprint(OUT::MSG_STYLE::DONE);
+
+        // Boucle principale pour détecter les événements de bouton
+        SDL_Event event;
+        OUT::xprint(OUT::MSG_STYLE::REQU, "Press any button on the device");
+        selected = false;
+        
+        while (!selected) {
+            // Vérifier les événements
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_JOYBUTTONUP) {
+                    __ptt_button = event.jbutton.button;
+                    selected = true;
+                    OUT::xprint(OUT::MSG_STYLE::DONE);
+                }
+            }
+            
+            // Pause pour éviter une boucle excessive
+            SDL_Delay(10);
+        }
+    }
+}
+
+struct termios  IN::__old_term;
+struct termios  IN::__new_term;
+int             IN::__prev_ptt_state = 0;
+std::string     IN::__garbage;
+int             IN::__ptt_button;
+SDL_Joystick*   IN::__joystick;

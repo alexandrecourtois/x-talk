@@ -1,146 +1,175 @@
-#include "xprint.h"
+#include <xprint.h>
 #include <iostream>
+#include <sstream>
 #include "globals.h"
-#include "utilities.h"
+#include "session.h"
+#include <tools.h>
 
-std::string LAST_COLOR(RESET);
+#define XPRINT      OUT::xprint
 
-void xprint(XType type, std::string msg, std::string ext, log4cpp::Category* logger) {
-    std::cout << RESET;
+std::string OUT::__LAST_COLOR(RESET);
+
+std::string padRight(const std::string& str, size_t totalLength) {
+    if (str.length() >= totalLength)
+        return str;
+    return str + std::string(totalLength - str.length(), ' ');
+}
+
+const std::string& OUT::get_LAST_COLOR() {
+    return __LAST_COLOR;
+}
+
+std::string OUT::xprint(MSG_STYLE style, std::string msg, std::string ext, log4cpp::Category* logger) {
+    std::ostringstream oss;
+
+    if (style != OUT::MSG_STYLE::DONE)
+        oss << CLEAN_LINE;
+    
+    oss << RESET;
    
-    switch(type) {
-        case M_CLEAN:
-            std::cout << RESET << CLEAN_LINE;
+    switch(style) {
+        case OUT::MSG_STYLE::CLEAN:
+            oss << RESET << CLEAN_LINE;
             break;
             
-        case M_INVITE:
-            std::cout << RESET << "> ";
+        case OUT::MSG_STYLE::INVITE:
+            oss << RESET << "> ";
             //if (logger) logger->info("> ");
             break;
             
-        case M_INFO:
-            std::cout << YELLOW_BOLD << "I " << RESET << BG_YELLOW << BLACK << msg << RESET << std::endl;
+        case OUT::MSG_STYLE::INFO:
+            oss << YELLOW_BOLD << "I " << RESET << BG_YELLOW << BLACK << msg << RESET << std::endl;
             if (logger) logger->info("I " + msg + "\n");
             break;
             
-        case M_HELP:
-            std::cout << MAGENTA << "H " << MAGENTA_BOLD << msg << RESET << MAGENTA << ": " << ext << RESET << std::endl;
+        case OUT::MSG_STYLE::HELP:
+            oss << MAGENTA << "H " << MAGENTA_BOLD << msg << RESET << MAGENTA << ": " << ext << RESET << std::endl;
             if (logger) logger->info("H " + msg + ": " + ext + "\n");
             break;
             
-        case M_WARNING:
-            std::cout << YELLOW_BOLD << "W " << RESET << msg;
+        case OUT::MSG_STYLE::WARNING:
+            oss << YELLOW_BOLD << "W " << RESET << msg;
             if (logger) logger->info("W " + msg);
             
             if (!ext.empty()) {
-                std::cout << ": " << YELLOW_BOLD << ext << RESET;
+                oss << ": " << YELLOW_BOLD << ext << RESET;
                 if (logger) logger->info(": " + ext);
             }
 
-            std::cout << std::endl;
+            oss << std::endl;
             if (logger) logger->info("\n");
             
-            LAST_COLOR = RESET;
+            __LAST_COLOR = RESET;
             break;
         
-        case M_INIT:
-            std::cout << RED_BOLD << "* " << RESET << msg;
+        case OUT::MSG_STYLE::INIT:
+            oss << RED_BOLD << "* " << RESET << msg;
             if (logger) logger->info("* " + msg);
             
             if (!ext.empty()) {
-                std::cout << ": " << YELLOW_BOLD << ext << RESET;
+                oss << ": " << YELLOW_BOLD << ext << RESET;
                 if (logger) logger->info(": " + ext);
             }
                 
-            LAST_COLOR = RESET;
-            std::cout << "..." << std::flush; 
+            __LAST_COLOR = RESET;
+            oss << "..." << std::flush; 
             if (logger) logger->info("...");
 
             break;
             
-        case M_DONE:
-            std::cout << GREEN_BOLD << " done" << RESET << ".";
+        case OUT::MSG_STYLE::DONE:
+            oss << GREEN_BOLD << " done" << RESET << ".";
             if (logger) logger->info(" done.");
 
             if (!msg.empty()) {
-                std::cout << CYAN_BOLD << "(" << msg << ")" << RESET;
+                oss << CYAN_BOLD << "(" << msg << ")" << RESET;
                 if (logger) logger->info("(" + msg + ")");
             }
                 
-            LAST_COLOR = RESET;
-            std::cout << std::endl;
+            __LAST_COLOR = RESET;
+            oss << std::endl;
             if (logger) logger->info("\n");
             
             break;
             
-        case M_DEFAULT:
-            std::cout << msg << std::flush;
+        case OUT::MSG_STYLE::DEFAULT:
+            oss << msg << std::flush;
             if (logger) logger->info(msg);
             
             break;
             
-        case M_REQU:
+        case OUT::MSG_STYLE::REQU:
             if (ext.empty()) {
-                std::cout << MAGENTA_BOLD << "? " << WHITE_BOLD << msg << ": " << MAGENTA_BOLD;
+                oss << MAGENTA_BOLD << "? " << WHITE_BOLD << msg << ": " << MAGENTA_BOLD;
                 if (logger) logger->info("?" + msg + ": ");
-                LAST_COLOR = MAGENTA_BOLD;
+                __LAST_COLOR = MAGENTA_BOLD;
             }
             else {
-                std::cout << MAGENTA_BOLD << msg << " " << WHITE_BOLD << ext << RESET << std::endl;
+                oss << MAGENTA_BOLD << msg << " " << WHITE_BOLD << ext << RESET << std::endl;
                 if (logger) logger->info(msg + " " + ext + "\n");
-                LAST_COLOR = RESET;
+                __LAST_COLOR = RESET;
             }
             
             break;
             
-        case M_ERROR:
-            std::cout << RED_BOLD << "! " << msg << "." << RESET << std::endl;
+        case OUT::MSG_STYLE::ERROR:
+            oss << RED_BOLD << "! " << msg << "." << RESET << std::endl;
             if (logger) logger->info("! " + msg + ".\n");
-            LAST_COLOR = RESET;
+            __LAST_COLOR = RESET;
             
             break;
 
-        case M_USER:
-            std::cout << BG_CYAN_BOLD << BLACK << ' ' << aircraft.tailnum << ' ' << RESET << CYAN_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(" " + aircraft.tailnum + " : " + msg + "\n");
+        case OUT::MSG_STYLE::USER:
+            oss << BG_CYAN_BOLD << BLACK << ' ' << SESSION::aircraft.tailnum << ' ' << RESET << CYAN_BOLD << ": " << msg << RESET << std::endl;
+            if (logger) logger->info(" " + SESSION::aircraft.tailnum + " : " + msg + "\n");
             break;
 
-        case M_USER_ALT:
-            std::cout << BG_RED_BOLD << BLACK << ' ' << aircraft.tailnum << ' ' << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(" " + aircraft.tailnum + " : " + msg + "\n");
+        case OUT::MSG_STYLE::USER_ALT:
+            oss << BG_RED_BOLD << BLACK << ' ' << SESSION::aircraft.tailnum << ' ' << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
+            if (logger) logger->info(" " + SESSION::aircraft.tailnum + " : " + msg + "\n");
             break;
 
-        case M_XTALK:
-            std::cout << BG_GREEN_BOLD << BLACK << speaker << RESET << GREEN_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(speaker + ": " + remove_ansi(msg) + "\n");
+        case OUT::MSG_STYLE::XTALK:
+            oss << BG_GREEN_BOLD << BLACK << SESSION::call_ID << RESET << GREEN_BOLD << ": " << msg << RESET << std::endl;
+            if (logger) logger->info(SESSION::call_ID + ": " + TOOLBOX::removeAnsiSq(msg) + "\n");
             break;
 
-        case M_XTALK_ALT:
-            std::cout << BG_RED_BOLD << WHITE_BOLD << speaker << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(speaker + ": " + msg);
+        case OUT::MSG_STYLE::XTALK_ALT:
+            oss << BG_RED_BOLD << WHITE_BOLD << SESSION::call_ID << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
+            if (logger) logger->info(SESSION::call_ID + ": " + msg);
             break;
 
-        case M_BLINK_BEGIN:
-            std::cout << WHITE_BOLD << BG_RED_BOLD << BLINK << msg << RESET;
+        case OUT::MSG_STYLE::BLINK_BEGIN:
+            oss << "> " << WHITE_BOLD << BG_RED_BOLD << BLINK << msg << RESET;
             break;
 
-        case M_BLINK_END:
-            std::cout << BACK_LINE << CLEAN_LINE;
+        case OUT::MSG_STYLE::BLINK_END:
+            oss << BACK_LINE << CLEAN_LINE;
             break;
 
-        case M_ENDL:
-            std::cout << std::endl;
+        case OUT::MSG_STYLE::ENDL:
+            oss << std::endl;
+            break;
+
+        case OUT::MSG_STYLE::CMD:
+            oss << WHITE_BOLD << ": " << msg;
+            
+            if (!ext.empty())
+                oss << GREEN_BOLD << ext;
+
+            oss << RESET << std::endl;
             break;
 
         default:
             break;
     }
     
-    std::cout << std::flush;
+    std::cout << oss.str() << std::flush;
+    return oss.str();
 }
 
-void xprintbox(char type, std::string text, std::string bcolor, std::string tcolor) {
-    if (type == DOUBLE) {
+void OUT::OUT::xprintbox(BOX_STYLE style, std::string text, std::string bcolor, std::string tcolor) {
+    if (style == BOX_STYLE::DOUBLE) {
         std::cout << bcolor << TL_DOUBLE;
         for (size_t i = 0; i < text.size() + 2; ++i) {
             std::cout << H_DOUBLE;
@@ -158,7 +187,7 @@ void xprintbox(char type, std::string text, std::string bcolor, std::string tcol
         std::cout << BR_DOUBLE << std::endl;
     }
     
-    if (type == SIMPLE) {
+    if (style == BOX_STYLE::SIMPLE) {
         std::cout << bcolor << TL_SIMPLE;
         for (size_t i = 0; i < text.size() + 2; ++i) {
             std::cout << H_SIMPLE;
@@ -175,6 +204,4 @@ void xprintbox(char type, std::string text, std::string bcolor, std::string tcol
 
         std::cout << BR_SIMPLE << std::endl;
     }
-    
-    //std::cout << RESET;
 }
