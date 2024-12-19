@@ -1,9 +1,6 @@
-#ifndef INPUTS_H
-#define INPUTS_H
+#pragma once
 
-#include <string>
-#include <termios.h>
-#include <SDL2/SDL.h>
+#include <pch.h>
 
 class IN {
     private:
@@ -36,5 +33,3 @@ class IN {
         // --- JOYSTICK ---
         static void selectJoystick();
 };
-
-#endif  // INPUTS_H

@@ -1,7 +1,6 @@
-#ifndef RADIO_H
-#define RADIO_H
+#pragma once
 
-#include <session.h>
+#include <pch.h>
 
 class RADIO {
     private:
@@ -25,5 +24,3 @@ class RADIO {
         static double getDistanceToAirport();
         static void updateStatus();
 };
-
-#endif  // RADIO_H

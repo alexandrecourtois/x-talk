@@ -1,19 +1,11 @@
-#include "enums.h"
-#include <xprint.h>
-#include "zmq_service.h"
-#include <asm-generic/errno.h>
-#include <chrono>
-#include <mutex>
-#include <stop_token>
-#include <thread>
-#include <zmq.hpp>
 #include <zmq_client.h>
-#include <reqrsp.h>
+#include <xprint.h>
+#include <lang.h>
 
 ZMQ_Client::ZMQ_Client(zmq::context_t& context, ServerType type, const Rsp_Dataframe& dataframe): ZMQ_Service(context, ServiceType::CLIENT, type, dataframe) {
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Creating client");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::CREATING_CLIENT));
     this->getSocket().connect(type.getAddress());
-    OUT::xprint(OUT::MSG_STYLE::DONE, type.getAddress());
+    OUT::xprint(MSG_STYLE::DONE, type.getAddress());
 }
 
 void ZMQ_Client::__thread_loop(std::stop_token token) {

@@ -1,9 +1,6 @@
-#ifndef LOCKABLE_H
-#define LOCKABLE_H
+#pragma once
 
-#include <vector>
-#include <mutex>
-#include <memory>
+#include <pch.h>
 
 class Lockable {
     private:
@@ -25,5 +22,3 @@ class Lockable {
             __mutexes[__mutex_index]->unlock();
         }
 };
-
-#endif  // LOCKABLE_H

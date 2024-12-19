@@ -1,19 +1,17 @@
-#include "airport.h"
-#include <cmath>
-#include "enums.h"
-#include <callbacks.h>
-#include "reqrsp.h"
-#include "session.h"
-#include <zmq_client.h>
-#include <tools.h>
+#include <msg.h>
+#include <airport.h>
 #include <xprint.h>
+#include <tools.h>
+#include <session.h>
+#include <zmq_client.h>
+#include <lang.h>
 
 void AIRPORTS::loadAiports(const std::string& filename) {
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Loading JSON airports", filename);
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_AIRPORTS), filename);
     
     __airports = TOOLBOX::loadJSON(filename);
     
-    OUT::xprint(OUT::MSG_STYLE::DONE, std::to_string(__airports.size()) + "airports found");
+    OUT::xprint(MSG_STYLE::DONE, std::to_string(__airports.size()) + " " + lang(MSG::AIRPORTS_FOUND));
 }
 
 bool AIRPORTS::isSupportedAirport() {

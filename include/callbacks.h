@@ -1,9 +1,6 @@
-#ifndef CALLBACKS_H
-#define CALLBACKS_H
+#pragma once
 
-#include <string>
-#include <map>
-#include <functional>
+#include <pch.h>
 
 class CALLBACKS {
     private:
@@ -34,5 +31,3 @@ class CALLBACKS {
         static std::string getValue(int type, const std::string &str);
         static bool hasCallback(int type, const std::string& key);
 };
-
-#endif // CALLBACKS_H

@@ -1,12 +1,6 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_audio.h>
-#include <string>
-#include <map>
-#include <SDL2/SDL_mixer.h>
-#include <vector>
+#include <pch.h>
 
 class AUDIO {
     private:
@@ -56,5 +50,3 @@ class AUDIO {
 
         static const std::vector<unsigned char>& getAudioStream();
 };
-
-#endif // AUDIO_H

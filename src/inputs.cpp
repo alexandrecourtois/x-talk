@@ -1,17 +1,11 @@
-#include <SDL2/SDL_joystick.h>
-#include <tools.h>
+#include "msg.h"
 #include <inputs.h>
-#include <iostream>
-#include <ostream>
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <thread>
+#include <string>
 #include <xprint.h>
-#include <utf8.h>
-#include <audio.h>
 #include <session.h>
+#include <audio.h>
+#include <tools.h>
+#include <lang.h>
 
 void IN::disableInput() {
     struct termios t;
@@ -219,7 +213,7 @@ bool IN::ptt_pushed() {
 void IN::selectJoystick() {
     SDL_Init(SDL_INIT_JOYSTICK);
     
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Listing available devices");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LISTING_AVAILABLE_DEVICES));
     
     int numJoysticks = SDL_NumJoysticks();
 
@@ -232,9 +226,9 @@ void IN::selectJoystick() {
     for (int i = 0; i < numJoysticks; ++i) {
         const char *joystickName = SDL_JoystickNameForIndex(i);
         if (joystickName) {
-            OUT::xprint(OUT::MSG_STYLE::REQU, std::to_string(i), joystickName);
+            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), joystickName);
         } else {
-            printf("%d : Unknown name\n", i);
+            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), lang(MSG::UNKNOWN_NAME));
         }
     }
     
@@ -247,15 +241,15 @@ void IN::selectJoystick() {
         // Ouvrir le joystick sélectionné
         __joystick = SDL_JoystickOpen(joystickIndex);
         if (__joystick == NULL) {
-            fprintf(stderr, "Impossible d'ouvrir le joystick %d : %s\n", joystickIndex, SDL_GetError());
+            OUT::xprint(MSG_STYLE::ERROR, lang(MSG::UNABLE_TO_OPEN_JOYSTICK));
         }
 
-        OUT::xprint(OUT::MSG_STYLE::INIT, "Selecting device", SDL_JoystickName(__joystick));
-        OUT::xprint(OUT::MSG_STYLE::DONE);
+        OUT::xprint(MSG_STYLE::INIT, lang(MSG::SELECTING_DEVICE), SDL_JoystickName(__joystick));
+        OUT::xprint(MSG_STYLE::DONE);
 
         // Boucle principale pour détecter les événements de bouton
         SDL_Event event;
-        OUT::xprint(OUT::MSG_STYLE::REQU, "Press any button on the device");
+        OUT::xprint(MSG_STYLE::REQU, lang(MSG::PRESS_ANY_BUTTON_ON_DEVICE));
         selected = false;
         
         while (!selected) {
@@ -264,7 +258,7 @@ void IN::selectJoystick() {
                 if (event.type == SDL_JOYBUTTONUP) {
                     __ptt_button = event.jbutton.button;
                     selected = true;
-                    OUT::xprint(OUT::MSG_STYLE::DONE);
+                    OUT::xprint(MSG_STYLE::DONE);
                 }
             }
             

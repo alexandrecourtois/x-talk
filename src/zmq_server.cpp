@@ -1,18 +1,11 @@
-#include "zmq_server.h"
-#include <stop_token>
-#include <thread>
-#include <zmq.h>
-#include <zmq.hpp>
-#include "enums.h"
-#include "reqrsp.h"
-#include "zmq_service.h"
-#include <functional>
+#include <zmq_server.h>
 #include <xprint.h>
+#include <lang.h>
 
 ZMQ_Server::ZMQ_Server(zmq::context_t& context, ServerType type, const Rsp_Dataframe& dataframe): ZMQ_Service(context, ServiceType::SERVER, type, dataframe) {
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Creating server");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::CREATING_SERVER));
     this->getSocket().bind(type.getAddress());
-    OUT::xprint(OUT::MSG_STYLE::DONE, type.getAddress());
+    OUT::xprint(MSG_STYLE::DONE, type.getAddress());
 }
 
 void ZMQ_Server::__thread_loop(std::stop_token token) {

@@ -1,9 +1,6 @@
-#ifndef AIRPORT_H
-#define AIRPORT_H
+#pragma once
 
-#include <string>
-#include <map>
-#include <nlohmann/json.hpp>
+#include <pch.h>
 
 #define UNSUPPORTED_AIRPORT     std::string("UNSUPPORTED_AIRPORT")
 
@@ -40,5 +37,3 @@ class AIRPORTS {
         static bool isSupportedAirport();
         static Airport& getCurrentAirport();
 };
-
-#endif  // AIRPORT_H

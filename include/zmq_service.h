@@ -1,12 +1,8 @@
-#ifndef ZMQ_SERVICE_H
-#define ZMQ_SERVICE_H
+#pragma once
 
-#include "reqrsp.h"
-#include <lockable.h>
-#include <stop_token>
-#include <thread>
-#include <zmq.hpp>
+#include <pch.h>
 #include <enums.h>
+#include <reqrsp.h>
 #include <session.h>
 
 class ZMQ_Service {
@@ -65,5 +61,3 @@ class ZMQ_Service {
                 __svc_thread.join();
         }
 };
-
-#endif  // ZMQ_SERVICE_H

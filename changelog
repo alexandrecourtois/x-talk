@@ -1,0 +1,32 @@
+*******************************************
+*   --- X-TALK --- BUGS / TODO LIST ---   *
+*******************************************
+
+# --- BUGS ---
+
+>>> BUG20241213-01 : OPEN
+	
+	In monitor mode, if not connected to any server, unable to quit (see zmq::poll).
+	
+>>> BUG20241214-01 : OPEN
+
+	xscan takes special key combinations into account as characters, then pressing Enter
+	results in an empty dialog.
+	
+>>> BUG20241214-02 : OPEN
+
+	Background radio noise sound is not played continuously when recording. There is a
+	small delay between first click sound and noise sound.		
+
+# --- IMPROVEMENTS ---
+
+>>> IMP20241214-01 : OPEN
+
+	When copying a speaker, the current dialog node becomes "root". Could be the dialog
+	node of the source speaker.
+
+>>> IMP20241215-01 : OPEN
+
+	In phrases.cfg, when using [] callbacks to another sentence, the callback must be
+	defined before using it. We may load the cfg file with to passes to avoid this, loading
+	first all sentences then replace the [] inside loaded sentences

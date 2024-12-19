@@ -1,19 +1,11 @@
-#include "audio.h"
-#include <callbacks.h>
-#include <xprint.h>
-#include <inputs.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_timer.h>
-#include <cmath>
-#include <string>
+#include "msg.h"
+#include <audio.h>
 #include <tools.h>
-#include "globals.h"
-#include <filesystem>
-#include <map>
-#include <iostream>
-#include <fstream>
+#include <xprint.h>
 #include <session.h>
 #include <radio.h>
+#include <callbacks.h>
+#include <lang.h>
 
 std::map<std::string, Mix_Chunk*>   AUDIO::__WAV_files;
 std::vector<unsigned char>          AUDIO::__audio_stream;
@@ -23,12 +15,12 @@ int                                 AUDIO::__sample_rate = 16000;
 std::map<std::string, std::string>  AUDIO::__phrases;
 
 void AUDIO::__init_phrs(const std::string& phrasePath) {
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Loading phrase file", "phrases.cfg");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_PHRASES) , "phrases.cfg");
     
     std::ifstream file(phrasePath);
 
     if (!file.is_open()) {
-        throw std::runtime_error("Impossible d'ouvrir le fichier.");
+        throw std::runtime_error(lang(MSG::UNABLE_TO_OPEN_FILE));
     }
 
     std::string line;
@@ -43,7 +35,7 @@ void AUDIO::__init_phrs(const std::string& phrasePath) {
         // Trouver la position du caractère '='
         size_t pos = line.find('=');
         if (pos == std::string::npos) {
-            throw std::runtime_error("Ligne mal formatée : " + line);
+            throw std::runtime_error(lang(MSG::MISFORMATTED_LINE) + line);
         }
 
         // Séparer la clé (à gauche de '=') et la valeur (à droite de '=')
@@ -60,7 +52,7 @@ void AUDIO::__init_phrs(const std::string& phrasePath) {
         __phrases[key] = value;
     }
     
-    OUT::xprint(OUT::MSG_STYLE::DONE);
+    OUT::xprint(MSG_STYLE::DONE);
 }
 
 void AUDIO::__load_audio(const std::string& audioPath) {
@@ -74,8 +66,8 @@ void AUDIO::__load_audio(const std::string& audioPath) {
 
     // Vérifie s'il y a des fichiers à charger
     if (totalFiles == 0) {
-        std::cout << "Aucun fichier .wav trouvé dans le répertoire." << std::endl;
-        return;
+        OUT::xprint(MSG_STYLE::ERROR, lang(MSG::NO_WAV_FILES_IN_DIRECTORY));
+        exit(1);
     }
 
     // Étape 2 : Charger les fichiers et afficher la barre de progression
@@ -87,20 +79,20 @@ void AUDIO::__load_audio(const std::string& audioPath) {
             if (chunk != nullptr) {
                 __WAV_files[filename] = chunk;
             } else {
-                std::cerr << "Erreur de chargement pour " << entry.path() << ": " << Mix_GetError() << std::endl;
+                OUT::xprint(MSG_STYLE::ERROR, lang(MSG::LOADING_ERROR) + " ", entry.path());
             }
             
             // Mise à jour de la barre de progression
             loadedFiles++;
-            TOOLBOX::displayProgressBar("Loading audio files...", loadedFiles, totalFiles);
+            TOOLBOX::displayProgressBar(lang(MSG::LOADING_AUDIO_FILES), loadedFiles, totalFiles);
         }
     }
     
     // Terminer la barre de progression à 100 %
-    TOOLBOX::displayProgressBar("Loading audio files...", totalFiles, totalFiles);
+    TOOLBOX::displayProgressBar(lang(MSG::LOADING_AUDIO_FILES), totalFiles, totalFiles);
     std::cout << CLEAN_LINE;
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Loading audio files");
-    OUT::xprint(OUT::MSG_STYLE::DONE, std::to_string(totalFiles) + " files");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_AUDIO_FILES));
+    OUT::xprint(MSG_STYLE::DONE, std::to_string(totalFiles) + " files");
 }
 
 void AUDIO::__play_tailnum() {
@@ -123,7 +115,7 @@ int AUDIO::__play(const std::string &filename, int channel, bool loop) {
         Mix_Chunk* sound = __WAV_files[filename];
 
         if (int ch = Mix_PlayChannel(channel, sound, loop ? -1 : 0) == -1) {
-            OUT::xprint(OUT::MSG_STYLE::ERROR, "Unable to play " + filename);
+            OUT::xprint(MSG_STYLE::ERROR, "Unable to play " + filename);
         } else {
             if (!loop) 
                 while(int p = Mix_Playing(channel) > 0) {
@@ -144,7 +136,7 @@ void AUDIO::__play(const std::vector<std::string>& fileNames, int channel) {
             __play(fileName, channel);
         } else {
             //std::cerr << "Fichier non trouvé dans la map: " << fileName << std::endl;
-            OUT::xprint(OUT::MSG_STYLE::WARNING, "Missing file", fileName);
+            OUT::xprint(MSG_STYLE::WARNING, "Missing file", fileName);
         }
     }
 }
@@ -190,7 +182,7 @@ std::vector<std::string> AUDIO::__phrase_to_waves(const std::string& str) {
     words = TOOLBOX::splitString(phrase, '&');
     
     for(unsigned int i = 0; i < words.size(); ++i) {
-        if (words[i][0] == '[' && words[i][words[0].size() - 1] == ']') {
+        if (words[i][0] == '[' && words[i][words[i].size() - 1] == ']') {
             std::vector<std::string> tmp_waves = __phrase_to_waves(words[i]);
             waves.insert(waves.end(), tmp_waves.begin(), tmp_waves.end());
         }
@@ -230,21 +222,21 @@ void AUDIO::init(const std::string& audioPath, const std::string& phrasePath) {
 void AUDIO::selectDevice() {
     // Initialiser SDL avec le sous-système audio
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        OUT::xprint(OUT::MSG_STYLE::ERROR, "Error while initializing SDL_AUDIO");
+        OUT::xprint(MSG_STYLE::ERROR, "Error while initializing SDL_AUDIO");
     }
     
     // Obtenir le nombre de périphériques d'entrée audio disponibles
     int numAudioDevices = SDL_GetNumAudioDevices(SDL_TRUE);  // SDL_TRUE pour les périphériques d'entrée
     if (numAudioDevices < 0) {
-        OUT::xprint(OUT::MSG_STYLE::ERROR, "Error while enumerating audio devices.");
+        OUT::xprint(MSG_STYLE::ERROR, "Error while enumerating audio devices.");
     }
 
     for (int i = 0; i < numAudioDevices; ++i) {
         const char* deviceName = SDL_GetAudioDeviceName(i, SDL_TRUE);  // SDL_TRUE pour l'entrée
         if (deviceName) {
-            OUT::xprint(OUT::MSG_STYLE::REQU, std::to_string(i), deviceName);
+            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), deviceName);
         } else {
-            OUT::xprint(OUT::MSG_STYLE::REQU, std::to_string(i), "Unamed audio device");
+            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), "Unamed audio device");
         }
     }
         
@@ -253,7 +245,7 @@ void AUDIO::selectDevice() {
             const char* selectedDeviceName = SDL_GetAudioDeviceName(audioIndex, SDL_TRUE);
             
             if (!selectedDeviceName) {
-                OUT::xprint(OUT::MSG_STYLE::ERROR, "Invalid audio device.");
+                OUT::xprint(MSG_STYLE::ERROR, "Invalid audio device.");
                 return;
             }
 
@@ -273,7 +265,7 @@ void AUDIO::selectDevice() {
             __device_id = SDL_OpenAudioDevice(selectedDeviceName, SDL_TRUE, &desiredSpec, &obtainedSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
 
             if (__device_id == 0) {
-                OUT::xprint(OUT::MSG_STYLE::ERROR, "Audio device error: " + std::string(SDL_GetError()));
+                OUT::xprint(MSG_STYLE::ERROR, "Audio device error: " + std::string(SDL_GetError()));
             }
     }
 }

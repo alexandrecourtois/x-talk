@@ -1,13 +1,10 @@
-#ifndef ZMQ_SERVER_H
-#define ZMQ_SERVER_H
+#pragma once
 
-#include <stop_token>
-#include <zmq.h>
-#include <zmq.hpp>
-#include "reqrsp.h"
-#include "enums.h"
-#include "zmq_service.h"
-
+#include <pch.h>
+#include <enums.h>
+#include <zmq_service.h>
+#include <reqrsp.h>
+#include <session.h>
 
 class ZMQ_Server: public ZMQ_Service {
     private:
@@ -21,5 +18,3 @@ class ZMQ_Server: public ZMQ_Service {
 
         Req getLastRequest();
 };
-
-#endif // ZMQ_SERVER_H

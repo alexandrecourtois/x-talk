@@ -1,54 +1,64 @@
-#include "vosk_api.h"
+#include <msg.h>
+#include <nlohmann/json_fwd.hpp>
+#include <vosk_api.h>
 #include <speaker.h>
-#include <vector>
 #include <xprint.h>
 #include <callbacks.h>
-#include <airport.h>
-#include <audio.h>
-#include <tools.h>
 #include <session.h>
+#include <audio.h>
 #include <inputs.h>
-#include <regex>
-#include <fstream>
+#include <airport.h>
 #include <radio.h>
-
-nlohmann::json Speaker::__load_json(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file) {
-        //std::cerr << "Erreur: Impossible de lire le fichier " << filename << std::endl;
-        exit(1);
-    }
-    nlohmann::json data;
-    file >> data;
-    return data;
-}
+#include <tools.h>
+#include <lang.h>
 
 void Speaker::__init_vosk(const char* path) {
-    OUT::xprint(OUT::MSG_STYLE::INIT, "Initializing Vosk", path);
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::INITIALIZING_VOSK), path);
 
-    vosk_set_log_level(-1);
-    this->__vmodel  = vosk_model_new(path);
-    this->__vrec    = vosk_recognizer_new(this->__vmodel, 16000.f);
+    if (SESSION::vosk_Models.contains(this->__vmodel_name)) {
+        this->__vmodel = SESSION::vosk_Models[this->__vmodel_name].first;
+        this->__vrec = SESSION::vosk_Recognizers[this->__vmodel_name];
+        SESSION::vosk_Models[this->__vmodel_name].second++;
+    } else {
+        vosk_set_log_level(-1);
+        SESSION::vosk_Models[this->__vmodel_name].first = vosk_model_new(path);
+        SESSION::vosk_Recognizers[this->__vmodel_name] = vosk_recognizer_new(SESSION::vosk_Models[__vmodel_name].first, 16000.0f);
+        SESSION::vosk_Models[this->__vmodel_name].second = 1;
+        this->__vmodel = SESSION::vosk_Models[this->__vmodel_name].first;
+        this->__vrec = SESSION::vosk_Recognizers[this->__vmodel_name];
+    }
 
-    OUT::xprint(OUT::MSG_STYLE::DONE);
+    OUT::xprint(MSG_STYLE::DONE);
 }
 
 void Speaker::__init_resp(const std::string& dialogPath) {
-    OUT::xprint(OUT::MSG_STYLE::INIT,"Loading JSON dialog tree", dialogPath);
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_DIALOG), dialogPath);
     
-    this->__dialog = this->__load_json(dialogPath);
-    this->__current_node = &this->__dialog["root"];
-    
-    OUT::xprint(OUT::MSG_STYLE::DONE);
+    this->__dialog = TOOLBOX::loadJSON(dialogPath);
+    this->__current_node = &this->__dialog[">ROOT"];
+
+    this->__load_labels(this->__current_node);
+
+    OUT::xprint(MSG_STYLE::DONE);
+}
+
+void Speaker::__load_labels(nlohmann::json* startNode) {
+    for(auto& [key, node]: startNode->items()) {
+        if (key[0] ==  '>')
+            this->__labels[key] = &node;
+
+        if (node.is_object())
+            this->__load_labels(&node);
+    }
 }
 
 nlohmann::json* Speaker::__get_response(const std::set<std::string>& userWords) {
     if (this->__current_node->contains("responses")) {
         for (auto& [key, responseNode] : (*this->__current_node)["responses"].items()) {
             if (responseNode.contains("keywords") && this->__matches_keyword(responseNode["keywords"], userWords)) {
-                if (responseNode.contains("goto")) {
-                    return &this->__dialog["root"]["responses"][responseNode["goto"].get<std::string>()];
-                }
+                    if (responseNode.contains("goto"))
+                        return this->__goto(responseNode["goto"].get<std::string>());
+
                 return &responseNode;
             }
         }
@@ -68,12 +78,21 @@ bool Speaker::__evaluate_expression(const std::string& expression, const std::se
         bool orMatch = false;
 
         while (std::getline(orStream, orKeyword, '|')) {
-            orKeyword.erase(remove(orKeyword.begin(), orKeyword.end(), '('), orKeyword.end());
-            orKeyword.erase(remove(orKeyword.begin(), orKeyword.end(), ')'), orKeyword.end());
+            std::erase(orKeyword, '(');
+            std::erase(orKeyword, ')');
 
-            if (userWords.find(orKeyword) != userWords.end()) {
+            if (userWords.contains(orKeyword)) {
                 orMatch = true;
                 break;
+            } else {
+                for(auto const& s: userWords) {
+                    int ld = TOOLBOX::getLevenshteinDistance_alt(s, orKeyword);
+                    
+                    if (ld >= 0 && ld <= SESSION::levenshtein_threshold) {
+                        orMatch = true;
+                        break;
+                    }
+                }
             }
         }
 
@@ -123,18 +142,60 @@ std::set<std::string> Speaker::__split_user_input(const std::string& userInput) 
     return words;
 }
 
-Speaker::Speaker(const std::string& callID, const std::string& modelPath, const std::string& dialogPath): __call_id(callID) {
-    if (!SESSION::no_audio)
+Speaker::Speaker(const std::string& callID, const std::string& modelPath, const std::string& dialogPath): __call_id(callID), __vmodel_name(modelPath) {
+    if (!SESSION::no_audio) {
         this->__init_vosk(modelPath.c_str());
+    }
     
     this->__init_resp(dialogPath);
 }
 
 Speaker::~Speaker() {
     if (!SESSION::no_audio) {
-        vosk_recognizer_free(this->__vrec);
-        vosk_model_free(this->__vmodel);
+        if (SESSION::vosk_Models[this->__vmodel_name].second == 1) {
+            vosk_recognizer_free(this->__vrec);
+            vosk_model_free(this->__vmodel);
+            SESSION::vosk_Models.erase(this->__vmodel_name);
+            SESSION::vosk_Recognizers.erase(this->__vmodel_name);
+        } else {
+            SESSION::vosk_Models[this->__vmodel_name].second--;
+        }
     }
+}
+
+Speaker& Speaker::operator=(const Speaker& orig) {
+    this->__call_id = orig.__call_id;
+    this->__vmodel_name = orig.__vmodel_name;
+    this->__vmodel = orig.__vmodel;
+    this->__vrec = orig.__vrec;
+    this->__dialog = orig.__dialog;
+    this->__current_node = &this->__dialog[">ROOT"];
+    SESSION::vosk_Models[this->__vmodel_name].second++;
+    this->__labels[">ROOT"] = this->__current_node;
+    this->__load_labels(this->__current_node);
+
+    return *this;
+}
+
+nlohmann::json* Speaker::__goto(const std::string& label) {
+    if (this->__labels.contains(label)) {
+        return this->__labels[label];
+    }
+
+    OUT::xprint(MSG_STYLE::ERROR, label + ": unknown label");
+    return nullptr;
+}
+
+void Speaker::__speak(nlohmann::json* node) {
+    OUT::xprint(MSG_STYLE::BLINK_BEGIN, "Speaking");
+    
+    std::string value = TOOLBOX::removeQuotes((*node)["audio"]);
+    std::vector<std::string> keys = TOOLBOX::splitString(value, ',');
+    
+    AUDIO::play(AUDIO::Type::RADIOCOM, keys);
+
+    OUT::xprint(MSG_STYLE::ENDL);
+    OUT::xprint(MSG_STYLE::BLINK_END);    
 }
 
 void Speaker::tell(std::string& input) {
@@ -148,7 +209,7 @@ void Speaker::tell(std::string& input) {
         else
             IN::disableInput();
             
-        OUT::xprint(OUT::MSG_STYLE::BLINK_BEGIN, "Recording... Press Enter to stop.");
+        OUT::xprint(MSG_STYLE::BLINK_BEGIN, lang(MSG::RECORDING));
         
         if (IN::ptt_pushed()) {
             while(IN::ptt_pushed());
@@ -158,13 +219,13 @@ void Speaker::tell(std::string& input) {
         else
             IN::xscan();
         
-        OUT::xprint(OUT::MSG_STYLE::BLINK_END);
-        OUT::xprint(OUT::MSG_STYLE::INVITE);
+        OUT::xprint(MSG_STYLE::BLINK_END);
+        OUT::xprint(MSG_STYLE::INVITE);
         
         AUDIO::stopRecording();
         AUDIO::play(AUDIO::Type::RADIOSTOP);
 
-        std::cout << "Analyzing... " << std::flush;
+        std::cout << lang(MSG::ANALYZING) << "... " << std::flush;
         
         vosk_recognizer_accept_waveform(this->__vrec, reinterpret_cast<const char*>(AUDIO::getAudioStream().data()), AUDIO::getAudioStream().size());
         
@@ -179,39 +240,71 @@ void Speaker::tell(std::string& input) {
         std::cout << BACK_LINE << CLEAN_LINE;
 
         if (AIRPORTS::isSupportedAirport())
-            OUT::xprint(OUT::MSG_STYLE::USER, input);
+            OUT::xprint(MSG_STYLE::USER, input);
         else
-            OUT::xprint(OUT::MSG_STYLE::USER_ALT, input);
+            OUT::xprint(MSG_STYLE::USER_ALT, input);
 
         if (AIRPORTS::isSupportedAirport() && RADIO::isWithinRange()) {
-            std::set<std::string> userWords = this->__split_user_input(input);
-            nlohmann::json* nextNode = this->__get_response(userWords);
+            if (this->__readback_keywords.empty()) {
+                std::set<std::string> userWords = this->__split_user_input(input);
+                nlohmann::json* nextNode = this->__get_response(userWords);
 
-            if (nextNode) {
-                this->__current_node = nextNode;
-                
-                if (this->__current_node->contains("phrase")) {
-                    OUT::xprint(OUT::MSG_STYLE::XTALK, this->__replace_keys(TOOLBOX::removeQuotes((*this->__current_node)["phrase"])));
-                }
-                
-                if (this->__current_node->contains("audio") && !SESSION::no_audio) {
-                    OUT::xprint(OUT::MSG_STYLE::BLINK_BEGIN, "Speaking");
+                if (nextNode) {
+                    this->__current_node = nextNode;
                     
-                    std::string value = TOOLBOX::removeQuotes((*this->__current_node)["audio"]);
-                    std::vector<std::string> keys = TOOLBOX::splitString(value, ',');
+                    if (this->__current_node->contains("phrase")) {
+                        OUT::xprint(MSG_STYLE::XTALK, this->__replace_keys(TOOLBOX::removeQuotes((*this->__current_node)["phrase"])));
+                    }
                     
-                    AUDIO::play(AUDIO::Type::RADIOCOM, keys);
+                    if (this->__current_node->contains("audio") && !SESSION::no_audio) {
+                        this->__speak(this->__current_node);
+                    }
 
-                    OUT::xprint(OUT::MSG_STYLE::ENDL);
-                    OUT::xprint(OUT::MSG_STYLE::BLINK_END);
+                    if (this->__current_node->contains("goto")) {
+                        this->__current_node = this->__goto((*this->__current_node)["goto"]);
+                        //std::cout << (*this->__current_node).dump(4) << std::endl;
+                    }
+
+                    if (this->__current_node->contains("readback")) {
+                        this->__readback_keywords = TOOLBOX::removeQuotes((*this->__current_node)["readback"]);
+                    }
                 }
-            }
-            else {
-                OUT::xprint(OUT::MSG_STYLE::XTALK_ALT, this->__dialog["default"]["phrase"]);
+                else {
+                    OUT::xprint(MSG_STYLE::XTALK_ALT, this->__dialog["default"]["phrase"]);
+
+                    if (!SESSION::no_audio)
+                        this->__speak(&this->__dialog["default"]);
+                }
+            } else if (this->__matches_keyword(this->__readback_keywords, this->__split_user_input(input))) {
+                this->__readback_keywords.clear();
             }
         }
     }
     else {
         std::cout << BACK_LINE << std::flush;
     }
+}
+
+std::string Speaker::getKeywords() {
+    if (this->isWaitingForReadback())
+        return this->__readback_keywords;
+    else
+        if (this->__current_node->contains("responses")) {
+            std::string keywords;
+
+            for (auto& [key, responseNode] : (*this->__current_node)["responses"].items()) {
+                if (responseNode.contains("keywords")) {
+                    keywords.insert(0, std::string(responseNode["keywords"]) + ",");
+                }
+            }
+
+            keywords.pop_back();
+            return keywords;
+        }
+
+    return std::string();
+}
+
+bool Speaker::isWaitingForReadback() {
+    return this->__readback_keywords.size();
 }

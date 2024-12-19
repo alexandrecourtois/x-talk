@@ -1,10 +1,8 @@
 #include <radio.h>
-#include <cmath>
-#include <SDL2/SDL_mixer.h>
 #include <session.h>
 #include <tools.h>
-#include <airport.h>
 #include <xprint.h>
+#include <airport.h>
 
 int RADIO::__old_com1_freq;
 int RADIO::__old_com2_freq;
@@ -51,7 +49,8 @@ int RADIO::getNoiseVolume() {
     if (volume > MIX_MAX_VOLUME)
         return MIX_MAX_VOLUME;
 
-    return std::floor(volume);
+    //return std::floor(volume);
+    return 0;
 }
 
 int RADIO::getSpeakVolume(int noiseVolume) {
@@ -78,9 +77,9 @@ void RADIO::updateStatus() {
             std::string airport = AIRPORTS::getAirportByFrequency(SESSION::dataframe.com1_freq);
             
             if (airport != UNSUPPORTED_AIRPORT) {
-                OUT::xprint(OUT::MSG_STYLE::CLEAN);
-                OUT::xprint(OUT::MSG_STYLE::INFO, "Airport frequency selected on COM1: " + airport);
-                OUT::xprint(OUT::MSG_STYLE::INVITE);
+                OUT::xprint(MSG_STYLE::CLEAN);
+                OUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM1: " + airport);
+                OUT::xprint(MSG_STYLE::INVITE);
             }
 
             __old_com1_freq = SESSION::dataframe.com1_freq;
@@ -90,9 +89,9 @@ void RADIO::updateStatus() {
             std::string airport = AIRPORTS::getAirportByFrequency(SESSION::dataframe.com2_freq);
             
             if (airport != UNSUPPORTED_AIRPORT) {
-                OUT::xprint(OUT::MSG_STYLE::CLEAN);
-                OUT::xprint(OUT::MSG_STYLE::INFO, "Airport frequency selected on COM2: " + airport);
-                OUT::xprint(OUT::MSG_STYLE::INVITE);
+                OUT::xprint(MSG_STYLE::CLEAN);
+                OUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM2: " + airport);
+                OUT::xprint(MSG_STYLE::INVITE);
             }
 
             __old_com2_freq = SESSION::dataframe.com2_freq;

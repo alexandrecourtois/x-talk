@@ -1,14 +1,10 @@
+#include <exception>
 #include <tools.h>
-#include <stdexcept>
 #include <xprint.h>
 #include <inputs.h>
-#include <regex>
-#include <sstream>
-#include <algorithm>
-#include <regex>
-#include <random>
-#include <cmath>
-#include <fstream>
+
+log4cpp::Appender *logfile;
+log4cpp::Category *xlog;
 
 std::string TOOLBOX::removeQuotes(std::string str) {
     str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
@@ -30,7 +26,7 @@ int TOOLBOX::selectById(int count_id) {
     int index;
     
     while(!selected) {
-        OUT::xprint(OUT::MSG_STYLE::REQU, "Select one device by ID");
+        OUT::xprint(MSG_STYLE::REQU, "Select one device by ID");
         
         std::string indexStr;
         std::optional<int> result;
@@ -43,7 +39,7 @@ int TOOLBOX::selectById(int count_id) {
         index = *result;
 
         if (index < 0 || index >= count_id) {
-            OUT::xprint(OUT::MSG_STYLE::ERROR, "Invalid ID");
+            OUT::xprint(MSG_STYLE::ERROR, "Invalid ID");
         }
         else
         {
@@ -91,12 +87,12 @@ int TOOLBOX::countLines(const std::string &str) {
 }
 
 void TOOLBOX::displayProgressBar(const std::string& msg, int current, int total) {
-    int barWidth = 40;
+    int barWidth = 30;
     float progress = (float)current / total;
     int pos = barWidth * progress;
     
     std::cout << '\r';
-    OUT::xprint(OUT::MSG_STYLE::INIT, msg, "", nullptr);
+    OUT::xprint(MSG_STYLE::INIT, msg, "", nullptr);
     std::cout << " [";
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) std::cout << "=";
@@ -194,12 +190,87 @@ double TOOLBOX::haversine(double lat1, double lon1, double lat2, double lon2) {
 }
 
 nlohmann::json TOOLBOX::loadJSON(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file) {
-        //std::cerr << "Erreur: Impossible de lire le fichier " << filename << std::endl;
+    try {
+        std::ifstream file(filename);
+//        if (!file) {
+            //std::cerr << "Erreur: Impossible de lire le fichier " << filename << std::endl;
+//            exit(1);
+//        }
+        nlohmann::json data;
+        file >> data;
+        return data;
+    } catch(const std::exception& e) {
+        OUT::xprint(MSG_STYLE::ERROR, e.what());
         exit(1);
     }
-    nlohmann::json data;
-    file >> data;
-    return data;
+}
+
+int TOOLBOX::getLevenshteinDistance(const std::string& str1, const std::string& str2) {
+    size_t s1_size = str1.size();
+    size_t s2_size = str2.size();
+    unsigned int i;
+    unsigned int j;
+
+    if (s1_size && s2_size) {
+        int v0[s1_size + 1];
+        int v1[s2_size + 1];
+
+        for(i = 0; i < s1_size; ++i)
+            v0[i] = i;
+
+        for(i = 0; i <= s1_size - 1; ++i) {
+            v1[0] = i + 1;
+
+            for(j = 0; j <= s2_size - 1; ++j) {
+                int delc = v0[j + 1] + 1;
+                int insc = v1[j] + 1;
+                int subc;
+
+                if (str1[i] == str2[j])
+                    subc = v0[j];
+                else
+                    subc = v0[j] + 1;
+
+                v1[j + 1] = std::min({delc, insc, subc});
+            }
+
+            memcpy(v0, v1, (s1_size + 1) * sizeof(int));
+        }
+
+        return v0[s2_size];
+    }
+
+    return -1;
+}
+
+int TOOLBOX::getLevenshteinDistance_alt(const std::string &str1, const std::string &str2) {
+    size_t s1_size = str1.size();
+    size_t s2_size = str2.size();
+    unsigned int i;
+    unsigned int j;
+    int s;
+
+    if (s1_size && s2_size) {
+        int d[s1_size + 1][s2_size + 1];
+
+        for(i = 1; i <= s1_size; ++i)
+            d[i][0] = i;
+
+        for(j = 1; j <= s2_size; ++j)
+            d[0][j] = j;
+
+        for(j = 1; j <= s2_size; ++j)
+            for(i = 1; i <= s1_size; ++i) {
+                if (str1[i] == str2[j])
+                    s = 0;
+                else
+                    s = 1;
+
+                d[i][j] = std::min({d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + s});
+        }
+
+        return d[s1_size][s2_size];
+    }
+
+    return -1;
 }

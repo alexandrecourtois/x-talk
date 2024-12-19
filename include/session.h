@@ -1,9 +1,11 @@
-#ifndef SESSION_H
-#define SESSION_H
+#pragma once
 
+#include <map>
+#include <pch.h>
+#include <aircraft.h>
 #include <reqrsp.h>
 #include <speaker.h>
-#include <aircraft.h>
+#include <vosk_api.h>
 
 class ZMQ_Client;
 class ZMQ_Server;
@@ -21,6 +23,8 @@ class SESSION {
         static bool no_joystick;
         static bool is_monitor;
 
+        static std::string ip_address;
+
         static Rsp_Dataframe dataframe;
         static Rsp_Dataframe dataframe_fake;
 
@@ -35,6 +39,12 @@ class SESSION {
         static ZMQ_Server* server_monitor;
 
         static Aircraft aircraft;
-};
 
-#endif  // SESSION_H
+        static std::map<std::string, std::pair<VoskModel*, int>> vosk_Models;
+        static std::map<std::string, VoskRecognizer*> vosk_Recognizers;
+
+        static bool show_keywords;
+        static bool show_readback;
+
+        static int levenshtein_threshold;
+};

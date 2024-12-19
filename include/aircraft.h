@@ -1,10 +1,7 @@
-#ifndef AIRCRAFT_H
-#define AIRCRAFT_H
+#pragma once
 
-#include <string>
+#include <pch.h>
 
 struct Aircraft {
     std::string tailnum;
 };
-
-#endif  // AIRCRAFT_H

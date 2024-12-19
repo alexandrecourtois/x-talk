@@ -1,21 +1,20 @@
-#ifndef SPEAKER_H
-#define SPEAKER_H
+#pragma once
 
+#include "vosk_api.h"
 #include <nlohmann/json_fwd.hpp>
-#include <vector>
-#include <vosk_api.h>
-#include <nlohmann/json.hpp>
-#include <set>
+#include <pch.h>
 
 class Speaker {
     private:
-        std::string                         __call_id;
-        VoskModel*                          __vmodel;
-        VoskRecognizer*                     __vrec;
-        nlohmann::json                      __dialog;
-        nlohmann::json*                     __current_node;
+        std::string                             __call_id;
+        std::string                             __vmodel_name;   
+        VoskModel*                              __vmodel;
+        VoskRecognizer*                         __vrec;     
+        nlohmann::json                          __dialog;
+        nlohmann::json*                         __current_node;
+        std::string                             __readback_keywords;
+        std::map<std::string, nlohmann::json*>  __labels;
 
-        nlohmann::json  __load_json(const std::string& filename);
         void            __init_vosk(const char* path);
         void            __init_resp(const std::string& dialogPath);
 
@@ -24,13 +23,18 @@ class Speaker {
         bool                    __evaluate_expression(const std::string& expression, const std::set<std::string>& userWords);
         bool                    __matches_keyword(const std::string& keywords, const std::set<std::string>& userWords);
         std::string             __replace_keys(const std::string& input);
+        void                    __load_labels(nlohmann::json* startNode);
+        nlohmann::json*         __goto(const std::string& label);
+        void                    __speak(nlohmann::json* node);
         
     public:
         Speaker() = default;
         Speaker(const std::string& callID, const std::string& modelPath, const std::string& dialogPath);
         ~Speaker();
 
-        void tell(std::string& input);
-};
+        Speaker& operator=(const Speaker& orig);
 
-#endif  // SPEAKER_H
+        void tell(std::string& input);
+        std::string getKeywords();
+        bool isWaitingForReadback();
+};

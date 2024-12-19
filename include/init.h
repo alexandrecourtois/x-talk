@@ -1,6 +1,5 @@
-#ifndef INIT_H
-#define INIT_H
+#pragma once
+
+#include <pch.h>
 
 void init_logfile();
-
-#endif  // INIT_H

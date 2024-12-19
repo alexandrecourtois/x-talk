@@ -1,12 +1,8 @@
-#ifndef ZMQ_CLIENT_H
-#define ZMQ_CLIENT_H
+#pragma once
 
-#include "enums.h"
-#include <stop_token>
-#include <zmq.hpp>
+#include <pch.h>
+#include <enums.h>
 #include <zmq_service.h>
-#include <reqrsp.h>
-#include <mutex>
 
 class ZMQ_Client: public ZMQ_Service {
     private:
@@ -19,5 +15,3 @@ class ZMQ_Client: public ZMQ_Service {
 
         void sendRequest(const Req& request, bool inClientThread = false);
 };
-
-#endif  // ZMQ_CLIENT_H

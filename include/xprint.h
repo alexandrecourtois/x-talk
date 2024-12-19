@@ -1,9 +1,9 @@
-#ifndef XPRINTF_H
-#define XPRINTF_H
+#pragma once
 
-#include <string>
-#include "globals.h"
-
+#include <log4cpp/Category.hh>
+#include <pch.h>
+#include <tools.h>
+#include <msg.h>
 
 #define BLINK       "\033[5m"
 #define BACK_LINE   "\033[A"
@@ -77,32 +77,9 @@ class OUT {
             DOUBLE
         };
 
-        enum class MSG_STYLE {
-            DEFAULT,
-            INIT,
-            DONE,
-            REQU,
-            ERROR,
-            WARNING,
-            HELP,
-            INFO,
-            INVITE,
-            CLEAN,
-            USER,
-            USER_ALT,
-            XTALK,
-            XTALK_ALT,
-            BLINK_BEGIN,
-            BLINK_END,
-            ENDL,
-            CMD
-        };
-
         static const std::string& get_LAST_COLOR();
         static std::string xprint(MSG_STYLE style = MSG_STYLE::DEFAULT, std::string msg = "", std::string ext = "", log4cpp::Category* logger = xlog);
         static void xprintbox(BOX_STYLE style, std::string text, std::string bcolor = WHITE, std::string tcolor = WHITE);
 
         friend class IN;
 };
-
-#endif

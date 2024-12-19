@@ -1,27 +1,22 @@
-#include <cstdlib>
-#include <iostream>
-#include <string>
-#include "enums.h"
+#include "msg.h"
+#include "speaker.h"
+#include <pch.h>
 #include <xprint.h>
-#include "globals.h"
-#include <callbacks.h>
-#include <SDL2/SDL.h>
-#include <inputs.h>
-#include <inputs.h>
-#include <termios.h>
-#include <unistd.h>
-#include "audio.h"
-#include <tools.h>
-#include "updater.h"
-#include <interp.h>
-#include "init.h"
-#include "airport.h"
-#include "reqrsp.h"
-#include "zmq_server.h"
-#include "zmq_client.h"
-#include <speaker.h>
+#include <reqrsp.h>
 #include <session.h>
-#include <zmq.hpp>
+#include <zmq_client.h>
+#include <zmq_server.h>
+#include <audio.h>
+#include <session.h>
+#include <tools.h>
+#include <airport.h>
+#include <inputs.h>
+#include <init.h>
+#include <interp.h>
+#include <updater.h>
+#include <lang.h>
+#include <en_US.h>
+#include <fr_FR.h>
 
 #define __VERSION__MAJOR    "0"
 #define __VERSION__MINOR    "01"
@@ -30,20 +25,22 @@
 #define __LINUX
 //#define __WINDOWS
 
+//#define TEST_MODE
+
 zmq::context_t __GLOBAL__context(1);
 
 void connect_xp() {
-    OUT::xprint(OUT::MSG_STYLE::INIT,"Connecting to X-Plane");
+    OUT::xprint(MSG_STYLE::INIT,lang(MSG::CONNECTING_TO_XPLANE));
     
     Req rq;
     rq.type = Request::GET_DATAFRAME;
     SESSION::client->sendRequest(rq);
  
-    OUT::xprint(OUT::MSG_STYLE::DONE, "X-Plane " + std::to_string(SESSION::dataframe.xp_major / 1000) + "." + std::to_string((SESSION::dataframe.xp_major / 10) % ((SESSION::dataframe.xp_major / 1000) * 100)));    
+    OUT::xprint(MSG_STYLE::DONE, "X-Plane " + std::to_string(SESSION::dataframe.xp_major / 1000) + "." + std::to_string((SESSION::dataframe.xp_major / 10) % ((SESSION::dataframe.xp_major / 1000) * 100)));    
 }
 
 void waitfor_aircraft() {
-    OUT::xprint(OUT::MSG_STYLE::INIT,"Waiting for aircraft");
+    OUT::xprint(MSG_STYLE::INIT, lang(MSG::WAITING_FOR_AIRCRAFT));
 
     Req rq;
     rq.type = Request::GET_DATAFRAME;
@@ -51,7 +48,7 @@ void waitfor_aircraft() {
     SESSION::client->sendRequest(rq);
 
     SESSION::aircraft.tailnum = SESSION::dataframe.tailnum;
-    OUT::xprint(OUT::MSG_STYLE::DONE, SESSION::aircraft.tailnum);
+    OUT::xprint(MSG_STYLE::DONE, SESSION::aircraft.tailnum);
 }
 
 bool process_args(int argc, char** argv) {
@@ -70,9 +67,9 @@ bool process_args(int argc, char** argv) {
         } else if (arg == "--xp-address") {
             if (i < argc) {
                 if (TOOLBOX::isValidIP(argv[i+1])) {
-                    ip_address = argv[i+1];
+                    SESSION::ip_address = argv[i+1];
                 } else {
-                    OUT::xprint(OUT::MSG_STYLE::ERROR, "Invalid IP address. Networking disabled");
+                    OUT::xprint(MSG_STYLE::ERROR, "Invalid IP address. Networking disabled");
                     SESSION::no_xplane = true;
                 }
             }
@@ -110,21 +107,21 @@ bool process_args(int argc, char** argv) {
 
 void init_netw() {
         if (!SESSION::no_xplane)
-            SESSION::client = new ZMQ_Client(__GLOBAL__context, TCP_Server(ip_address + ":5555"));
+            SESSION::client = new ZMQ_Client(__GLOBAL__context, TCP_Server(SESSION::ip_address + ":5555"));
         else
             SESSION::client = new ZMQ_Client(__GLOBAL__context, INPROC_Server("fake_server"));
 }
 
 void init_main() {
     if (SESSION::no_xplane)
-        OUT::xprint(OUT::MSG_STYLE::WARNING, "FAKE SERVER ENABLED OVERRIDE IP ADDRESS.");
+        OUT::xprint(MSG_STYLE::WARNING, lang(MSG::FAKE_SERVER_ENABLED));
     
     if (!SESSION::no_audio) {
         AUDIO::selectDevice();
         AUDIO::init("audio/VOIX_AFIS/", "phrases.cfg");
     }
     else
-        OUT::xprint(OUT::MSG_STYLE::WARNING, "Disable", "AUDIO");
+        OUT::xprint(MSG_STYLE::WARNING, lang(MSG::DISABLE), "AUDIO");
     
     if (!SESSION::is_monitor) {
         AIRPORTS::loadAiports("airports.json");
@@ -134,7 +131,7 @@ void init_main() {
     if (!SESSION::no_joystick)
         IN::selectJoystick();
     else
-        OUT::xprint(OUT::MSG_STYLE::WARNING, "Disable", "JOYSTICK");
+        OUT::xprint(MSG_STYLE::WARNING, lang(MSG::DISABLE), "JOYSTICK");
     
     if (SESSION::no_xplane) {
         SESSION::server_fake = new ZMQ_Server(__GLOBAL__context, INPROC_Server("fake_server"), SESSION::dataframe_fake);
@@ -156,6 +153,7 @@ void init_main() {
     }
 }
 
+#ifndef TEST_MODE
 int main(int argc, char **argv) {
     #ifdef __LINUX
     system("clear");
@@ -165,10 +163,13 @@ int main(int argc, char **argv) {
     system("cls");
     #endif
 
-     OUT::xprintbox(OUT::BOX_STYLE::DOUBLE,
+    OUT::xprintbox(OUT::BOX_STYLE::DOUBLE,
               "xtalk -- version " + std::string(__VERSION__MAJOR) + "." + std::string(__VERSION__MINOR) + " -- " + std::string(__LICENSE),
               WHITE,
               CYAN_BOLD);
+
+    //Lang::setLang<en_US>();
+    Lang::setLang<fr_FR>();
 
     init_logfile();
     
@@ -181,11 +182,17 @@ int main(int argc, char **argv) {
  
     std::string input;
 
-    OUT::xprint(OUT::MSG_STYLE::INFO, "Type \"cmd_help\" to get help.");
+    OUT::xprint(MSG_STYLE::INFO, lang(MSG::GET_HELP));
     CMD::run("cmd_getmem");
 
     while (input != "q") {
-        OUT::xprint(OUT::MSG_STYLE::INVITE);
+        if (SESSION::show_readback && SESSION::agent.isWaitingForReadback())
+            OUT::xprint(MSG_STYLE::WARNING, "Waiting for readback");
+
+        if (SESSION::show_keywords)
+            OUT::xprint(MSG_STYLE::KEYWORDS, SESSION::agent.getKeywords());
+
+        OUT::xprint(MSG_STYLE::INVITE);
 
         if (!SESSION::is_monitor)
             IN::xscan(input, update);
@@ -193,11 +200,11 @@ int main(int argc, char **argv) {
             IN::xscan(input);
 
         if (input == "q" || input == "quit") {
-            std::cout << BG_GREEN_BOLD << BLACK << SESSION::call_ID << RESET << GREEN_BOLD << ": Au revoir !" << RESET << std::endl;
+            std::cout << BG_GREEN_BOLD << BLACK << SESSION::call_ID << RESET << GREEN_BOLD << ": " << Lang::getString(MSG::GOODBYE) << RESET << std::endl;
             break;
         }
 
-        if (std::equal(SESSION::cmd_prefix.begin(), SESSION::cmd_prefix.end(), input.begin())) {
+        if (std::equal(SESSION::cmd_prefix.begin(), SESSION::cmd_prefix.end(), input.begin()) || SESSION::is_monitor) {
             CMD::run(input);
         }
         else if (!SESSION::is_monitor)
@@ -219,4 +226,20 @@ int main(int argc, char **argv) {
 
     return EXIT_SUCCESS;
 }
+#else
+int main(int argc, char **argv) {
+    std::string str1;
+    std::string str2;
+
+    while(true) {
+        std::cin >> str1;
+        std::cin >> str2;
+
+        std::cout << "d.......:" << TOOLBOX::getLevenshteinDistance(str1, str2) << std::endl;
+        std::cout << "d_alt...:" << TOOLBOX::getLevenshteinDistance_alt(str1, str2) << std::endl;
+    }
+
+    return EXIT_SUCCESS;
+}
+#endif
 

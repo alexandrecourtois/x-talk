@@ -1,10 +1,9 @@
-#ifndef TOOLS_H
-#define TOOLS_H
+#pragma once
 
-#include <optional>
-#include <string>
-#include <vector>
-#include <nlohmann/json.hpp>
+#include <pch.h>
+
+extern log4cpp::Appender *logfile;
+extern log4cpp::Category *xlog;
 
 class TOOLBOX {
     private:
@@ -27,6 +26,6 @@ class TOOLBOX {
         static double haversine(double lat1, double lon1, double lat2, double lon2);
         static double toRad(double degree);
         static nlohmann::json loadJSON(const std::string& filename);
+        static int getLevenshteinDistance(const std::string& str1, const std::string& str2);
+        static int getLevenshteinDistance_alt(const std::string& str1, const std::string& str2);
 };
-
-#endif // TOOLS_H

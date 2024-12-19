@@ -1,7 +1,7 @@
-#ifndef REQRSP_H
-#define REQRSP_H
+#pragma once
 
-#include "enums.h"
+#include <pch.h>
+#include <enums.h>
 #include <lockable.h>
 
 #define REQ_GET_DATAFRAME       int(0)
@@ -45,11 +45,7 @@ class Rsp_Dataframe: public Lockable {
         auto operator <=>(const Rsp_Dataframe&) const = default;
 };
 
-extern Rsp_Dataframe dataframe;
-
 template<typename T = int> class Rsp: public Lockable {
     public:
         T value;
 };
-
-#endif // REQRSP_H

@@ -1,40 +1,64 @@
 {
-    "root": {
-        "phrase": "Bonjour ! Pour commencer, veuillez saluer avec 'bonjour'.",
+    ">ROOT": {
         "responses": {
             ">INTRO": {
             	"keywords": "bonjour|bonsoir",
                 "phrase": "{TAILNUM} Bonjour, quelles sont vos intentions ?",
-                "audio": "[say_intentions]",
-                "readback": "",
+                "audio": "[demande_intentions]",
                 "responses": {
                     ">TOUR_DE_PISTE": {
                     	"keywords": "(tour|tours)&(piste|pistes)&(parking|parkings)",
-                        "phrase": "{TAILNUM} Visibilité {VISIBILITY}, QNH {QNH}, vendu du {WINDDIR} {WINDSPEED} noeuds, piste en service {RUNWAY}. Rappelez au point d'attente {HOLDPOINT}",
-                        "audio": "[parameters]",
+                        "phrase": "{TAILNUM} Visibilité {VISIBILITY}, QNH {QNH}, vent du {WINDDIR} {WINDSPEED} noeuds, piste en service {RUNWAY}. Rappelez au point d'attente {HOLDPOINT}",
+                        "audio": "[paramètres]",
                         "readback": "(rappel|rappelle)&point&attente",
                         "responses": {
                             ">POINT_ATTENTE": {
-                            	"keywords": "point|attente",
-                                "phrase": "Veuillez attendre au point d'attente."
-                            },
-                            ">ERREUR": {
-                            	"keywords": "erreur|erreurs|trompé|tromper|trompez|trompée|trompées",
-                            	"phrase": "Ok je vous écoute",
-                            	"goto": ">INTRO"
+                            	"keywords": "remonte",
+                                "phrase": "{TAILNUM} Rappelez aligné prêt au départ",
+                                "audio": "[rappelez_prêt_départ]",
+                                "readback": "(rappel|rappelle)&aligné&prêt&départ",
+                                "responses": {
+                                    ">ALIGNE_PRET_DEPART": {
+                                        "keywords": "aligné&prêt&départ",
+                                        "phrase": "{TAILNUM} vent du {WINDDIR} {WINDSPEED} noeuds, rappelez en vent arrière",
+                                        "audio": "[paramètres_départ]",
+                                        "readback": "(rappel|rappelle)&vent&arrière",
+                                        "responses": {
+                                            ">RAPPEL_VENT_ARRIERE": {
+                                                "keywords": "vent&arrière&complet",
+                                                "phrase": "{TAILNUM} rappelez en finale",
+                                                "audio": "[rappelez_finale]",
+                                                "readback": "(rappel|rappelle)&(final|finale)",
+                                                "responses": {
+                                                    ">RAPPEL_FINALE_COMPLET": {
+                                                        "keywords": "finale|final",
+                                                        "responses": {
+                                                            ">PISTE_DEGAGEE": {
+                                                                "keywords": "piste&(dégagé|dégagée|dégager)",
+                                                                "goto": ">AU_REVOIR"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-                    },
-                    ">AU_REVOIR": {
-                    	"keywords": "revoir",
-                        "phrase": "Au revoir ! Passez une bonne journée !"
                     }
                 }
+            },
+            ">AU_REVOIR": {
+                "phrase": "{TAILNUM} Bien reçu, bonne journée",
+                "audio": "[bien_reçu_bonne_journée]",
+                "goto": ">ROOT"
             }
         }
     },
     "default": {
     	"keywords": "default",
-        "phrase": "Je ne suis pas sûr de comprendre. Pouvez-vous reformuler ?"
+        "phrase": "Je ne suis pas sûr de comprendre. Pouvez-vous reformuler ?",
+        "audio": "[pas_compris]"
     }
 }

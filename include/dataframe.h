@@ -1,7 +1,6 @@
-#ifndef DATAFRAME_H
-#define DATAFRAME_H
+#pragma once
 
-#include <compare>
+#include <pch.h>
 
 extern struct Location {
     double latitude;
@@ -12,5 +11,3 @@ extern struct Location {
 } selected_airport_location;
 
 extern Location old_airport_location;
-
-#endif // DATAFRAME_H

@@ -1,6 +1,5 @@
-#ifndef UPDATER_H
-#define UPDATER_H
+#pragma once
+
+#include <pch.h>
 
 void update();
-
-#endif  // UPDATER_H

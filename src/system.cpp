@@ -1,6 +1,4 @@
-#include "system.h"
-#include <iostream>
-#include <unistd.h>
+#include <system.h>
 
 size_t getMemoryUsageInMB() {
     std::ifstream statm("/proc/self/statm");

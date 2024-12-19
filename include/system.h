@@ -1,8 +1,5 @@
-#ifndef SYSTEM_H
-#define SYSTEM_H
+#pragma once
 
-#include <fstream>
+#include <pch.h>
 
 size_t getMemoryUsageInMB();
-
-#endif // SYSTEM_H

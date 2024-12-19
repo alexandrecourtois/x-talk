@@ -1,10 +1,6 @@
-#ifndef INTERP_H
-#define INTERP_H
+#pragma once
 
-#include <string>
-#include <string_view>
-#include <vector>
-#include <map>
+#include <pch.h>
 
 #define CMD_HELP                "cmd_help"
 #define CMD_RELOAD_JSON         "cmd_reload_json"
@@ -18,6 +14,10 @@
 #define CMD_GET_RADIO_RANGE     "cmd_get_radio_range"
 #define CMD_GET_RADIO_QUALITY   "cmd_get_radio_quality"
 #define CMD_MONITOR             "cmd_monitor"
+#define CMD_SHOW_KEYWORDS       "cmd_show_keywords"
+#define CMD_HIDE_KEYWORDS       "cmd_hide_keywords"
+#define CMD_SHOW_READBACK       "cmd_show_readback"
+#define CMD_HIDE_READBACK       "cmd_hide_readback"
 
 class CMD {
     private:
@@ -33,7 +33,11 @@ class CMD {
             cmd_get_position,
             cmd_get_radio_range,
             cmd_get_radio_quality,
-            cmd_monitor
+            cmd_monitor,
+            cmd_show_keywords,
+            cmd_hide_keywords,
+            cmd_show_readback,
+            cmd_hide_readback
         };
 
         static std::map<std::string, cmd_> __cmd_list;
@@ -47,5 +51,3 @@ class CMD {
         static int run(std::string_view cmd);
         static void monitor(const std::vector<std::string>& args);
 };
-
-#endif  // INTERP_H

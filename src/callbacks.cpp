@@ -1,13 +1,6 @@
 #include <callbacks.h>
-#include "globals.h"
-#include <map>
-#include <string>
-#include "airport.h"
-#include <functional>
-#include <xprint.h>
-#include <cmath>
-#include "reqrsp.h"
 #include <session.h>
+#include <airport.h>
 
 std::string CALLBACKS::__get_visibility_AUDIO() {
     int v;
@@ -104,34 +97,33 @@ void CALLBACKS::__init() {
 }
 
 std::string CALLBACKS::getValue(int type, const std::string &str) {
-    if (!SESSION::no_xplane) {
-        std::map<std::string, std::function<std::string()>>* callbacks;
+    std::map<std::string, std::function<std::string()>>* callbacks;
 
-        switch (type) {
-            case AUDIO:
-                callbacks = &__callbacks_audio;
-                break;
+    switch (type) {
+        case AUDIO:
+            callbacks = &__callbacks_audio;
+            break;
 
-            case TEXT:
-                callbacks = &__callbacks_text;
-                break;
+        case TEXT:
+            callbacks = &__callbacks_text;
+            break;
 
-            default:
-                return std::string();        
-        }
-
-        if (__callbacks_audio.empty())
-            __init();
-
-        AIRPORTS::updateCurrentAirport();
-            
-        return (*callbacks)[str]();
+        default:
+            return std::string();        
     }
-    
-    return std::string();
+
+    if (__callbacks_audio.empty())
+        __init();
+
+    AIRPORTS::updateCurrentAirport();
+        
+    return (*callbacks)[str]();
 }
 
 bool CALLBACKS::hasCallback(int type, const std::string& key) {
+    if (__callbacks_audio.empty())
+        __init();
+
     switch(type) {
         case AUDIO:
             return __callbacks_audio.contains(key);

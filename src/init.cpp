@@ -1,13 +1,5 @@
-#include "init.h"
-#include "enums.h"
-#include <xprint.h>
-#include "globals.h"
-#include <callbacks.h>
-#include <fstream>
-#include <iostream>
-#include "audio.h"
+#include <init.h>
 #include <tools.h>
-#include "zmq_client.h"
 
 void init_logfile() {
     try {

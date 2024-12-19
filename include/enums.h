@@ -1,8 +1,6 @@
-#ifndef ENUMS_H
-#define ENUMS_H
+#pragma once
 
-#include <string>
-#include <string_view>
+#include <pch.h>
 
 enum class ServiceType {
     SERVER,
@@ -56,5 +54,3 @@ enum class Request {
     UPD_AIRPORT,
     UPD_MONITOR
 };
-
-#endif  // ENUMS_H
