@@ -25,46 +25,32 @@
 #include <memory>
 #include <mutex>
 #include <filesystem>
-#include <termios.h>
 #include <ostream>
 #include <unistd.h>
 #include <fcntl.h>
-#include <utf8.h>
 #include <chrono>
+#include <thread>
+#include <mutex>
 
-
-// ******************************************************
-// * NLOHMANN INCLUDES
-// ******************************************************
-
+#ifdef PLATFORM_LINUX
+#include <termios.h>
 #include <nlohmann/json.hpp>
-
-// ******************************************************
-// * SDL INCLUDES
-// ******************************************************
-
+#include <nlohmann/json_fwd.hpp>
+#include <utf8cpp/utf8.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_mixer.h>
-
-// ******************************************************
-// * LOG4CPP INCLUDES
-// ******************************************************
-
-#include <log4cpp/Category.hh>
-#include <log4cpp/FileAppender.hh>
-#include <log4cpp/OstreamAppender.hh>
-#include <log4cpp/PatternLayout.hh>
-#include <log4cpp/Priority.hh>
-
-// ******************************************************
-// * ZMQ INCLUDES
-// ******************************************************
-
-#include <zmq.hpp>
-
-// ******************************************************
-// * ZMQ INCLUDES
-// ******************************************************
-
 #include <vosk_api.h>
+#include <zmq.hpp>
+#endif
+
+#ifdef PLATFORM_WINDOWS
+#include "third_party/nlohmann/json.hpp"
+#include "third_party/nlohmann/json_fwd.hpp"
+#include "third_party/utf8/utf8.h"
+#include "third_party/SDL2/SDL.h"
+#include "third_party/SDL2/SDL_audio.h"
+#include "third_party/SDL2/SDL_mixer.h"
+#include "third_party/vosk_api/vosk_api.h"
+#include "third_party/cppzmq/zmq.hpp"
+#endif

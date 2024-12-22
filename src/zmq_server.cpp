@@ -3,9 +3,9 @@
 #include <lang.h>
 
 ZMQ_Server::ZMQ_Server(zmq::context_t& context, ServerType type, const Rsp_Dataframe& dataframe): ZMQ_Service(context, ServiceType::SERVER, type, dataframe) {
-    OUT::xprint(MSG_STYLE::INIT, lang(MSG::CREATING_SERVER));
+    X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::CREATING_SERVER));
     this->getSocket().bind(type.getAddress());
-    OUT::xprint(MSG_STYLE::DONE, type.getAddress());
+    X_OUTPUT::xprint(MSG_STYLE::DONE, type.getAddress());
 }
 
 void ZMQ_Server::__thread_loop(std::stop_token token) {

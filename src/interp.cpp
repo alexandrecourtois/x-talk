@@ -43,52 +43,52 @@ int CMD::run(std::string_view cmdline) {
             switch(__cmd_list[cmd]) {
                 case cmd_::cmd_help:
                     if (!SESSION::is_monitor) {
-                        OUT::xprint(MSG_STYLE::HELP, CMD_RELOAD_JSON, "Reload JSON tree.");
-                        OUT::xprint(MSG_STYLE::HELP, CMD_RELOAD_PHRASES, "Reload phrase file.");
-                        OUT::xprint(MSG_STYLE::HELP, CMD_REINIT_JOYSTICK, "Reinitialize joystick.");
-                        OUT::xprint(MSG_STYLE::HELP, CMD_REINIT_AUDIO, "Reinitialize audio subsystem.");
+                        X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_RELOAD_JSON, "Reload JSON tree.");
+                        X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_RELOAD_PHRASES, "Reload phrase file.");
+                        X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_REINIT_JOYSTICK, "Reinitialize joystick.");
+                        X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_REINIT_AUDIO, "Reinitialize audio subsystem.");
                     }
 
-                    OUT::xprint(MSG_STYLE::HELP, CMD_GETMEM, "Display RAM usage.");
-                    OUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO, "Display radio parameters.");
-                    OUT::xprint(MSG_STYLE::HELP, CMD_GET_WEATHER, "Display weather known conditions.");
-                    OUT::xprint(MSG_STYLE::HELP, CMD_GET_POSITION, "Display current aircraft position.");
-                    OUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO_RANGE, "Display radio depending on altitude and weather.");                        OUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO_QUALITY, "Display radio and speaker noise volume.");
+                    X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GETMEM, "Display RAM usage.");
+                    X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO, "Display radio parameters.");
+                    X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GET_WEATHER, "Display weather known conditions.");
+                    X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GET_POSITION, "Display current aircraft position.");
+                    X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO_RANGE, "Display radio depending on altitude and weather.");                        X_OUTPUT::xprint(MSG_STYLE::HELP, CMD_GET_RADIO_QUALITY, "Display radio and speaker noise volume.");
                     break;
 
                 case cmd_::cmd_get_radio_quality:
-                    oss << OUT::xprint(MSG_STYLE::CMD, "Max volume: ", std::to_string(MIX_MAX_VOLUME))
-                        << OUT::xprint(MSG_STYLE::CMD, "Radio noise volume: ", std::to_string(RADIO::getNoiseVolume()));
+                    oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "Max volume: ", std::to_string(MIX_MAX_VOLUME))
+                        << X_OUTPUT::xprint(MSG_STYLE::CMD, "Radio noise volume: ", std::to_string(RADIO::getNoiseVolume()));
                     break;
 
                 case cmd_::cmd_get_radio_range:
-                    oss << OUT::xprint(MSG_STYLE::CMD, "Radio range: ", TOOLBOX::toString(RADIO::getRange(), 2) + " km")
-                        << OUT::xprint(MSG_STYLE::CMD, "In freq airport: ", TOOLBOX::toString(RADIO::getDistanceToAirport(), 2) + " km");
+                    oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "Radio range: ", TOOLBOX::toString(RADIO::getRange(), 2) + " km")
+                        << X_OUTPUT::xprint(MSG_STYLE::CMD, "In freq airport: ", TOOLBOX::toString(RADIO::getDistanceToAirport(), 2) + " km");
                     break;
 
                 case cmd_::cmd_get_position:
                     SESSION::dataframe.lock();
-                        oss << OUT::xprint(MSG_STYLE::CMD, "Latitude: ", std::to_string(SESSION::dataframe.latitude) + " deg")
-                            << OUT::xprint(MSG_STYLE::CMD, "Longitude: ", std::to_string(SESSION::dataframe.longitude) + " deg")
-                            << OUT::xprint(MSG_STYLE::CMD, "Altitude: ", TOOLBOX::toString(SESSION::dataframe.altitude, 0) + " ft");
+                        oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "Latitude: ", std::to_string(SESSION::dataframe.latitude) + " deg")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "Longitude: ", std::to_string(SESSION::dataframe.longitude) + " deg")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "Altitude: ", TOOLBOX::toString(SESSION::dataframe.altitude, 0) + " ft");
                     SESSION::dataframe.unlock();
                     break;
 
                 case cmd_::cmd_get_weather:
                     SESSION::dataframe.lock();
-                        oss << OUT::xprint(MSG_STYLE::CMD, "----------------------")
-                            << OUT::xprint(MSG_STYLE::CMD, "Around AIRCRAFT : ")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Visibility: ",     TOOLBOX::toString(SESSION::dataframe.visibility / 1000.0f, 1) + " km")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Wind direction: ", TOOLBOX::toString(SESSION::dataframe.winddir,0) + " deg")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Wind speed: ",     TOOLBOX::toString(SESSION::dataframe.windspeed, 0) + " kts")
-                            << OUT::xprint(MSG_STYLE::CMD, "    QNH: ",            TOOLBOX::toString(SESSION::dataframe.qnh / 100.0f, 0) + " p")
-                            << OUT::xprint(MSG_STYLE::CMD, "----------------------")
-                            << OUT::xprint(MSG_STYLE::CMD, "In freq AIRPORT : ")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Visibility: ",     TOOLBOX::toString(SESSION::dataframe.infreq_visibility / 1000.0f, 1) + " km")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Wind direction: ", TOOLBOX::toString(SESSION::dataframe.infreq_winddir,0) + " deg")
-                            << OUT::xprint(MSG_STYLE::CMD, "    Wind speed: ",     TOOLBOX::toString(SESSION::dataframe.infreq_windspeed, 0) + " kts")
-                            << OUT::xprint(MSG_STYLE::CMD, "    QNH: ",            TOOLBOX::toString(SESSION::dataframe.infreq_qnh / 100.0f, 0) + " p")
-                            << OUT::xprint(MSG_STYLE::CMD, "----------------------");
+                        oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "----------------------")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "Around AIRCRAFT : ")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Visibility: ",     TOOLBOX::toString(SESSION::dataframe.visibility / 1000.0f, 1) + " km")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Wind direction: ", TOOLBOX::toString(SESSION::dataframe.winddir,0) + " deg")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Wind speed: ",     TOOLBOX::toString(SESSION::dataframe.windspeed, 0) + " kts")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    QNH: ",            TOOLBOX::toString(SESSION::dataframe.qnh / 100.0f, 0) + " p")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "----------------------")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "In freq AIRPORT : ")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Visibility: ",     TOOLBOX::toString(SESSION::dataframe.infreq_visibility / 1000.0f, 1) + " km")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Wind direction: ", TOOLBOX::toString(SESSION::dataframe.infreq_winddir,0) + " deg")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    Wind speed: ",     TOOLBOX::toString(SESSION::dataframe.infreq_windspeed, 0) + " kts")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "    QNH: ",            TOOLBOX::toString(SESSION::dataframe.infreq_qnh / 100.0f, 0) + " p")
+                            << X_OUTPUT::xprint(MSG_STYLE::CMD, "----------------------");
                     SESSION::dataframe.unlock();
                     break;
                             
@@ -101,7 +101,7 @@ int CMD::run(std::string_view cmdline) {
                             
                         str += std::to_string(SESSION::dataframe.com1_freq) + "Hz | Vol. " + std::to_string(static_cast<int>(SESSION::dataframe.com1_vol * 100)) + "%";
                         
-                        oss << OUT::xprint(MSG_STYLE::CMD, "COM1: " + str);
+                        oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "COM1: " + str);
                         
                         if (SESSION::dataframe.com2_active)
                             str = "ON  | ";
@@ -110,12 +110,12 @@ int CMD::run(std::string_view cmdline) {
                             
                         str += std::to_string(SESSION::dataframe.com2_freq) + "Hz | Vol. " + std::to_string(static_cast<int>(SESSION::dataframe.com2_vol * 100)) + "%";
                         
-                        oss << OUT::xprint(MSG_STYLE::CMD, "COM2: " + str);
+                        oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "COM2: " + str);
                     SESSION::dataframe.unlock();
                     break;
                             
                 case cmd_::cmd_getmem:
-                    oss << OUT::xprint(MSG_STYLE::CMD, "Size in RAM: " + std::to_string(getMemoryUsageInMB()) + "Mb");
+                    oss << X_OUTPUT::xprint(MSG_STYLE::CMD, "Size in RAM: " + std::to_string(getMemoryUsageInMB()) + "Mb");
                     break;
                             
                 case cmd_::cmd_monitor:
@@ -123,9 +123,9 @@ int CMD::run(std::string_view cmdline) {
                         if (!args.empty())
                             monitor(args);
                         else
-                            OUT::xprint(MSG_STYLE::ERROR, "Missing arguments");
+                            X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "Missing arguments");
                     } else
-                        OUT::xprint(MSG_STYLE::ERROR, "cmd_monitor only available in monitor mode");
+                        X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "cmd_monitor only available in monitor mode");
 
                     break;
 
@@ -157,11 +157,11 @@ int CMD::run(std::string_view cmdline) {
                                 break;
 
                             default:
-                                OUT::xprint(MSG_STYLE::ERROR, "Not yet implemented command");
+                                X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "Not yet implemented command");
                                 break;
                         }
                     } else
-                        OUT::xprint(MSG_STYLE::ERROR, "Command unavailable in monitor mode or not yet implemented");
+                        X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "Command unavailable in monitor mode or not yet implemented");
 
                     break;
             }
@@ -169,7 +169,7 @@ int CMD::run(std::string_view cmdline) {
             return TOOLBOX::countLines(oss.str());
         }
         else {
-            OUT::xprint(MSG_STYLE::ERROR, cmd + ": Unknown command. Type cmd_help to get help");
+            X_OUTPUT::xprint(MSG_STYLE::M_ERROR, cmd + ": Unknown command. Type cmd_help to get help");
             return 1;
         }
     } else
@@ -183,14 +183,14 @@ void CMD::monitor(const std::vector<std::string>& args) {
 
         for(const auto& cmd: args)
             if (__cmd_list.find("cmd_get_" + cmd) == __cmd_list.end()) {
-                OUT::xprint(MSG_STYLE::ERROR, "Invalid parameter: " + cmd);
+                X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "Invalid parameter: " + cmd);
                 return;
             }
 
         int allcmds_lines = 0;
 
         for(const auto& cmd: args) {
-            OUT::xprint(MSG_STYLE::INFO, "--- " + cmd +" ---");
+            X_OUTPUT::xprint(MSG_STYLE::INFO, "--- " + cmd +" ---");
             allcmds_lines += run("cmd_get_" + cmd);
         }
 
@@ -202,9 +202,9 @@ void CMD::monitor(const std::vector<std::string>& args) {
         for(int i = 0; i < allcmds_lines; i++)
             std::cout << BACK_LINE << std::flush;
 
-        while(!IN::kbhit()) {
+        while(!X_INPUT::kbhit()) {
             for(const auto& cmd: args) {
-                OUT::xprint(MSG_STYLE::INFO, "--- " + cmd +" ---");
+                X_OUTPUT::xprint(MSG_STYLE::INFO, "--- " + cmd +" ---");
                 run("cmd_get_" + cmd);
             }
 

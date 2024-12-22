@@ -1,6 +1,4 @@
 #include <msg.h>
-#include <nlohmann/json_fwd.hpp>
-#include <vosk_api.h>
 #include <speaker.h>
 #include <xprint.h>
 #include <callbacks.h>
@@ -13,7 +11,7 @@
 #include <lang.h>
 
 void Speaker::__init_vosk(const char* path) {
-    OUT::xprint(MSG_STYLE::INIT, lang(MSG::INITIALIZING_VOSK), path);
+    X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::INITIALIZING_VOSK), path);
 
     if (SESSION::vosk_Models.contains(this->__vmodel_name)) {
         this->__vmodel = SESSION::vosk_Models[this->__vmodel_name].first;
@@ -28,18 +26,18 @@ void Speaker::__init_vosk(const char* path) {
         this->__vrec = SESSION::vosk_Recognizers[this->__vmodel_name];
     }
 
-    OUT::xprint(MSG_STYLE::DONE);
+    X_OUTPUT::xprint(MSG_STYLE::DONE);
 }
 
 void Speaker::__init_resp(const std::string& dialogPath) {
-    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_DIALOG), dialogPath);
+    X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::LOADING_DIALOG), dialogPath);
     
     this->__dialog = TOOLBOX::loadJSON(dialogPath);
     this->__current_node = &this->__dialog[">ROOT"];
 
     this->__load_labels(this->__current_node);
 
-    OUT::xprint(MSG_STYLE::DONE);
+    X_OUTPUT::xprint(MSG_STYLE::DONE);
 }
 
 void Speaker::__load_labels(nlohmann::json* startNode) {
@@ -182,20 +180,20 @@ nlohmann::json* Speaker::__goto(const std::string& label) {
         return this->__labels[label];
     }
 
-    OUT::xprint(MSG_STYLE::ERROR, label + ": unknown label");
+    X_OUTPUT::xprint(MSG_STYLE::M_ERROR, label + ": unknown label");
     return nullptr;
 }
 
 void Speaker::__speak(nlohmann::json* node) {
-    OUT::xprint(MSG_STYLE::BLINK_BEGIN, "Speaking");
+    X_OUTPUT::xprint(MSG_STYLE::BLINK_BEGIN, "Speaking");
     
     std::string value = TOOLBOX::removeQuotes((*node)["audio"]);
     std::vector<std::string> keys = TOOLBOX::splitString(value, ',');
     
     AUDIO::play(AUDIO::Type::RADIOCOM, keys);
 
-    OUT::xprint(MSG_STYLE::ENDL);
-    OUT::xprint(MSG_STYLE::BLINK_END);    
+    X_OUTPUT::xprint(MSG_STYLE::ENDL);
+    X_OUTPUT::xprint(MSG_STYLE::BLINK_END);    
 }
 
 void Speaker::tell(std::string& input) {
@@ -203,29 +201,29 @@ void Speaker::tell(std::string& input) {
         AUDIO::play(AUDIO::Type::RADIOSTART);
         AUDIO::startRecording();
         
-        if (!IN::ptt_pushed()) {
+        if (!X_INPUT::ptt_pushed()) {
             std::cout << BACK_LINE << "> " << std::flush;
         }
         else
-            IN::disableInput();
+            X_INPUT::disableInput();
             
-        OUT::xprint(MSG_STYLE::BLINK_BEGIN, lang(MSG::RECORDING));
+        X_OUTPUT::xprint(MSG_STYLE::BLINK_BEGIN, lang(T_MSG::RECORDING));
         
-        if (IN::ptt_pushed()) {
-            while(IN::ptt_pushed());
-            IN::enableInput();
+        if (X_INPUT::ptt_pushed()) {
+            while(X_INPUT::ptt_pushed());
+            X_INPUT::enableInput();
             std::cout << std::endl;
         }
         else
-            IN::xscan();
+            X_INPUT::xscan();
         
-        OUT::xprint(MSG_STYLE::BLINK_END);
-        OUT::xprint(MSG_STYLE::INVITE);
+        X_OUTPUT::xprint(MSG_STYLE::BLINK_END);
+        X_OUTPUT::xprint(MSG_STYLE::INVITE);
         
         AUDIO::stopRecording();
         AUDIO::play(AUDIO::Type::RADIOSTOP);
 
-        std::cout << lang(MSG::ANALYZING) << "... " << std::flush;
+        std::cout << lang(T_MSG::ANALYZING) << "... " << std::flush;
         
         vosk_recognizer_accept_waveform(this->__vrec, reinterpret_cast<const char*>(AUDIO::getAudioStream().data()), AUDIO::getAudioStream().size());
         
@@ -240,9 +238,9 @@ void Speaker::tell(std::string& input) {
         std::cout << BACK_LINE << CLEAN_LINE;
 
         if (AIRPORTS::isSupportedAirport())
-            OUT::xprint(MSG_STYLE::USER, input);
+            X_OUTPUT::xprint(MSG_STYLE::USER, input);
         else
-            OUT::xprint(MSG_STYLE::USER_ALT, input);
+            X_OUTPUT::xprint(MSG_STYLE::USER_ALT, input);
 
         if (AIRPORTS::isSupportedAirport() && RADIO::isWithinRange()) {
             if (this->__readback_keywords.empty()) {
@@ -253,7 +251,7 @@ void Speaker::tell(std::string& input) {
                     this->__current_node = nextNode;
                     
                     if (this->__current_node->contains("phrase")) {
-                        OUT::xprint(MSG_STYLE::XTALK, this->__replace_keys(TOOLBOX::removeQuotes((*this->__current_node)["phrase"])));
+                        X_OUTPUT::xprint(MSG_STYLE::XTALK, this->__replace_keys(TOOLBOX::removeQuotes((*this->__current_node)["phrase"])));
                     }
                     
                     if (this->__current_node->contains("audio") && !SESSION::no_audio) {
@@ -270,7 +268,7 @@ void Speaker::tell(std::string& input) {
                     }
                 }
                 else {
-                    OUT::xprint(MSG_STYLE::XTALK_ALT, this->__dialog["default"]["phrase"]);
+                    X_OUTPUT::xprint(MSG_STYLE::XTALK_ALT, this->__dialog["default"]["phrase"]);
 
                     if (!SESSION::no_audio)
                         this->__speak(&this->__dialog["default"]);

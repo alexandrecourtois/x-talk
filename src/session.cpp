@@ -1,4 +1,3 @@
-#include "vosk_api.h"
 #include <session.h>
 
 bool SESSION::no_audio;

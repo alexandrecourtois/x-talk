@@ -1,7 +1,5 @@
 #pragma once
 
-#include "vosk_api.h"
-#include <nlohmann/json_fwd.hpp>
 #include <pch.h>
 
 class Speaker {

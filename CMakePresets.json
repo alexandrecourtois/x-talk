@@ -1,0 +1,48 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "Linux",
+            "displayName": "Linux",
+            "description": "x86_64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-DPLATFORM_LINUX",
+                "PLATFORM": "${presetName}"
+            }
+        },
+        {
+            "name": "Windows_MSYS2",
+            "displayName": "Windows (MSYS2)",
+            "description": "x86_64",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-DPLATFORM_WINDOWS -I${sourceDir}/include -static-libgcc -static-libstdc++",
+                "PLATFORM": "${presetName}"
+            }
+        },
+        {
+            "name": "Windows",
+            "displayName": "Windows (Linux MinGW)",
+            "description": "x86_64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/x86_64-w64-mingw32-gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/x86_64-w64-mingw32-g++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-DPLATFORM_WINDOWS -I${sourceDir}/include -static-libgcc -static-libstdc++",
+                "PLATFORM": "${presetName}"
+            }
+        }
+    ]
+}

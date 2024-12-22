@@ -77,9 +77,9 @@ void RADIO::updateStatus() {
             std::string airport = AIRPORTS::getAirportByFrequency(SESSION::dataframe.com1_freq);
             
             if (airport != UNSUPPORTED_AIRPORT) {
-                OUT::xprint(MSG_STYLE::CLEAN);
-                OUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM1: " + airport);
-                OUT::xprint(MSG_STYLE::INVITE);
+                X_OUTPUT::xprint(MSG_STYLE::CLEAN);
+                X_OUTPUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM1: " + airport);
+                X_OUTPUT::xprint(MSG_STYLE::INVITE);
             }
 
             __old_com1_freq = SESSION::dataframe.com1_freq;
@@ -89,9 +89,9 @@ void RADIO::updateStatus() {
             std::string airport = AIRPORTS::getAirportByFrequency(SESSION::dataframe.com2_freq);
             
             if (airport != UNSUPPORTED_AIRPORT) {
-                OUT::xprint(MSG_STYLE::CLEAN);
-                OUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM2: " + airport);
-                OUT::xprint(MSG_STYLE::INVITE);
+                X_OUTPUT::xprint(MSG_STYLE::CLEAN);
+                X_OUTPUT::xprint(MSG_STYLE::INFO, "Airport frequency selected on COM2: " + airport);
+                X_OUTPUT::xprint(MSG_STYLE::INVITE);
             }
 
             __old_com2_freq = SESSION::dataframe.com2_freq;

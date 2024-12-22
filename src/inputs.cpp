@@ -1,4 +1,7 @@
-#include "msg.h"
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
+#include <cstdio>
+#include <msg.h>
 #include <inputs.h>
 #include <string>
 #include <xprint.h>
@@ -6,16 +9,20 @@
 #include <audio.h>
 #include <tools.h>
 #include <lang.h>
+#include <stdio.h>
 
-void IN::disableInput() {
+void X_INPUT::disableInput() {
+#ifdef PLATFORM_LINUX
     struct termios t;
     tcgetattr(STDIN_FILENO, &t);
     t.c_lflag &= ~ICANON; // Mode non canonique : saisie immédiate sans Entrée
     t.c_lflag &= ~ECHO;   // Désactiver l'écho : n'affiche pas les caractères
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
+#endif // PLATFORM_LINUX
 }
 
-void IN::enableInput() {
+void X_INPUT::enableInput() {
+#ifdef PLATFORM_LINUX
     struct termios t;
     tcgetattr(STDIN_FILENO, &t);
     t.c_lflag |= ICANON; // Réactiver le mode canonique
@@ -23,9 +30,11 @@ void IN::enableInput() {
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
     
     tcflush(STDIN_FILENO, TCIFLUSH);
+#endif // PLATFORM_LINUX
 }
 
-char IN::kbhit(bool in_xscan) {
+char X_INPUT::kbhit(bool in_xscan) {
+#ifdef PLATFORM_LINUX
     int ch;
     bool ret = false;
 
@@ -53,9 +62,12 @@ char IN::kbhit(bool in_xscan) {
         tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
 
     return ret;  // Retourne true si un caractère est disponible
+#else
+    return 0;
+#endif // PLATFORM_LINUX
 }
 
-bool IN::__isUtf8Character(const std::string& str) {
+bool X_INPUT::__isUtf8Character(const std::string& str) {
     try {
         auto it = str.begin();
         while (it != str.end()) {
@@ -70,7 +82,7 @@ bool IN::__isUtf8Character(const std::string& str) {
     return false;
 }
 
-bool IN::__isLastCharacterASCII(const std::string& str) {
+bool X_INPUT::__isLastCharacterASCII(const std::string& str) {
     if (str.empty()) {
         return false;  // La chaîne est vide, pas de dernier caractère
     }
@@ -109,7 +121,7 @@ bool IN::__isLastCharacterASCII(const std::string& str) {
     return false;  // Si c'est un octet invalide
 }
 
-void IN::xscan(std::string &str, void (*callback)(), int delay) {
+void X_INPUT::xscan(std::string &str, void (*callback)(), int delay) {
     std::string input;
     char ch;
     auto last_time = std::chrono::steady_clock::now();
@@ -126,7 +138,7 @@ void IN::xscan(std::string &str, void (*callback)(), int delay) {
                 last_time = now;
             }
         }
-        
+#ifdef PLATFORM_LINUX        
         if (kbhit(true)) {  // Si un caractère est disponible
             ch = getchar();  // Lire le caractère
             
@@ -148,7 +160,7 @@ void IN::xscan(std::string &str, void (*callback)(), int delay) {
                         input.pop_back();  // Supprimer le dernier caractère
                     //} while (!input.empty() && !isStartOfUtf8Char(input.back()));
                     
-                    std::cout << RESET << "\b " << OUT::__LAST_COLOR << "\b" << std::flush;  // Effacer le dernier caractère affiché
+                    std::cout << RESET << "\b " << X_OUTPUT::__LAST_COLOR << "\b" << std::flush;  // Effacer le dernier caractère affiché
                 }
             } else if (ch == '\n') {  // Si la touche Entrée est appuyée
                 std::cout << std::endl;
@@ -156,12 +168,14 @@ void IN::xscan(std::string &str, void (*callback)(), int delay) {
             } else {
                 if (!AUDIO::isRecording()) {
                     input.push_back(ch);  // Ajouter le caractère à l'entrée
+                    //printf("coucou\n");
                     std::cout << ch << std::flush;  // Afficher le caractère saisi
                 }
             }
             
             tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
         }
+#endif // PLATFORM_LINUX
         
         usleep(1000);
     }
@@ -171,18 +185,20 @@ void IN::xscan(std::string &str, void (*callback)(), int delay) {
     str = input;
 }
 
-void IN::xscan_anykey() {
+void X_INPUT::xscan_anykey() {
+#ifdef PLATFORM_LINUX
     while(!kbhit()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         tcsetattr(STDIN_FILENO, TCSANOW, &__old_term);
     }
+#endif
 }
 
-void IN::xscan() {
+void X_INPUT::xscan() {
     xscan(__garbage);
 }
 
-bool IN::ptt_changed() {
+bool X_INPUT::ptt_changed() {
     SDL_Event event;
     
     while(SDL_PollEvent(&event)) { };
@@ -198,7 +214,7 @@ bool IN::ptt_changed() {
     return false;
 }
 
-bool IN::ptt_pushed() {
+bool X_INPUT::ptt_pushed() {
     if (!SESSION::no_joystick) {
         SDL_Event event;
     
@@ -210,10 +226,10 @@ bool IN::ptt_pushed() {
     return false;
 }
 
-void IN::selectJoystick() {
+void X_INPUT::selectJoystick() {
     SDL_Init(SDL_INIT_JOYSTICK);
     
-    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LISTING_AVAILABLE_DEVICES));
+    X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::LISTING_AVAILABLE_DEVICES));
     
     int numJoysticks = SDL_NumJoysticks();
 
@@ -226,9 +242,9 @@ void IN::selectJoystick() {
     for (int i = 0; i < numJoysticks; ++i) {
         const char *joystickName = SDL_JoystickNameForIndex(i);
         if (joystickName) {
-            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), joystickName);
+            X_OUTPUT::xprint(MSG_STYLE::REQU, std::to_string(i), joystickName);
         } else {
-            OUT::xprint(MSG_STYLE::REQU, std::to_string(i), lang(MSG::UNKNOWN_NAME));
+            X_OUTPUT::xprint(MSG_STYLE::REQU, std::to_string(i), lang(T_MSG::UNKNOWN_NAME));
         }
     }
     
@@ -241,15 +257,15 @@ void IN::selectJoystick() {
         // Ouvrir le joystick sélectionné
         __joystick = SDL_JoystickOpen(joystickIndex);
         if (__joystick == NULL) {
-            OUT::xprint(MSG_STYLE::ERROR, lang(MSG::UNABLE_TO_OPEN_JOYSTICK));
+            X_OUTPUT::xprint(MSG_STYLE::M_ERROR, lang(T_MSG::UNABLE_TO_OPEN_JOYSTICK));
         }
 
-        OUT::xprint(MSG_STYLE::INIT, lang(MSG::SELECTING_DEVICE), SDL_JoystickName(__joystick));
-        OUT::xprint(MSG_STYLE::DONE);
+        X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::SELECTING_DEVICE), SDL_JoystickName(__joystick));
+        X_OUTPUT::xprint(MSG_STYLE::DONE);
 
         // Boucle principale pour détecter les événements de bouton
         SDL_Event event;
-        OUT::xprint(MSG_STYLE::REQU, lang(MSG::PRESS_ANY_BUTTON_ON_DEVICE));
+        X_OUTPUT::xprint(MSG_STYLE::REQU, lang(T_MSG::PRESS_ANY_BUTTON_ON_DEVICE));
         selected = false;
         
         while (!selected) {
@@ -258,7 +274,7 @@ void IN::selectJoystick() {
                 if (event.type == SDL_JOYBUTTONUP) {
                     __ptt_button = event.jbutton.button;
                     selected = true;
-                    OUT::xprint(MSG_STYLE::DONE);
+                    X_OUTPUT::xprint(MSG_STYLE::DONE);
                 }
             }
             
@@ -268,9 +284,12 @@ void IN::selectJoystick() {
     }
 }
 
-struct termios  IN::__old_term;
-struct termios  IN::__new_term;
-int             IN::__prev_ptt_state = 0;
-std::string     IN::__garbage;
-int             IN::__ptt_button;
-SDL_Joystick*   IN::__joystick;
+//#ifdef PLATFORM_LINUX
+struct termios  X_INPUT::__old_term;
+struct termios  X_INPUT::__new_term;
+//#endif // PLATFORM_LINUX
+
+int             X_INPUT::__prev_ptt_state = 0;
+std::string     X_INPUT::__garbage;
+int             X_INPUT::__ptt_button;
+SDL_Joystick*   X_INPUT::__joystick;

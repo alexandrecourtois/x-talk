@@ -5,7 +5,7 @@ enum class MSG_STYLE {
     INIT,
     DONE,
     REQU,
-    ERROR,
+    M_ERROR,
     WARNING,
     HELP,
     INFO,
@@ -22,7 +22,7 @@ enum class MSG_STYLE {
     KEYWORDS
 };
 
-enum class MSG {
+enum class T_MSG {
     EMPTY,
     GET_HELP,
     FAKE_SERVER_ENABLED,

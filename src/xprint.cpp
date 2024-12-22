@@ -1,13 +1,12 @@
-#include "msg.h"
-#include <log4cpp/Category.hh>
+#include <msg.h>
 #include <xprint.h>
 #include <session.h>
 #include <tools.h>
 #include <lang.h>
 
-#define XPRINT      OUT::xprint
+#define XPRINT      X_OUTPUT::xprint
 
-std::string OUT::__LAST_COLOR(RESET);
+std::string X_OUTPUT::__LAST_COLOR(RESET);
 
 std::string padRight(const std::string& str, size_t totalLength) {
     if (str.length() >= totalLength)
@@ -15,11 +14,11 @@ std::string padRight(const std::string& str, size_t totalLength) {
     return str + std::string(totalLength - str.length(), ' ');
 }
 
-const std::string& OUT::get_LAST_COLOR() {
+const std::string& X_OUTPUT::get_LAST_COLOR() {
     return __LAST_COLOR;
 }
 
-std::string OUT::xprint(MSG_STYLE style, std::string msg, std::string ext, log4cpp::Category* logger) {
+std::string X_OUTPUT::xprint(MSG_STYLE style, std::string msg, std::string ext) {
     std::ostringstream oss;
 
     if (style != MSG_STYLE::DONE)
@@ -45,112 +44,85 @@ std::string OUT::xprint(MSG_STYLE style, std::string msg, std::string ext, log4c
             
             oss << RESET << std::endl;
 
-            if (logger) {
-                logger->info("I " + msg);
-
-                if (!ext.empty())
-                    logger->info(": " + ext);
-
-                logger->info("\n");
-            }
-
             break;
             
         case MSG_STYLE::HELP:
             oss << MAGENTA << "H " << MAGENTA_BOLD << msg << RESET << MAGENTA << ": " << ext << RESET << std::endl;
-            if (logger) logger->info("H " + msg + ": " + ext + "\n");
             break;
             
         case MSG_STYLE::WARNING:
             oss << YELLOW_BOLD << "W " << RESET << msg;
-            if (logger) logger->info("W " + msg);
             
             if (!ext.empty()) {
                 oss << ": " << YELLOW_BOLD << ext << RESET;
-                if (logger) logger->info(": " + ext);
             }
 
             oss << std::endl;
-            if (logger) logger->info("\n");
             
             __LAST_COLOR = RESET;
             break;
         
         case MSG_STYLE::INIT:
             oss << RED_BOLD << "* " << RESET << msg;
-            if (logger) logger->info("* " + msg);
             
             if (!ext.empty()) {
                 oss << ": " << YELLOW_BOLD << ext << RESET;
-                if (logger) logger->info(": " + ext);
             }
                 
             __LAST_COLOR = RESET;
             oss << "..." << std::flush; 
-            if (logger) logger->info("...");
 
             break;
             
         case MSG_STYLE::DONE:
-            oss << GREEN_BOLD << " " + Lang::getString(MSG::DONE) << RESET << ".";
-            if (logger) logger->info(" " + Lang::getString(MSG::DONE));
+            oss << GREEN_BOLD << " " + Lang::getString(T_MSG::DONE) << RESET << ".";
 
             if (!msg.empty()) {
                 oss << CYAN_BOLD << " (" << msg << ")" << RESET;
-                if (logger) logger->info(" (" + msg + ")");
             }
                 
             __LAST_COLOR = RESET;
             oss << std::endl;
-            if (logger) logger->info("\n");
             
             break;
             
         case MSG_STYLE::DEFAULT:
             oss << msg << std::flush;
-            if (logger) logger->info(msg);
             
             break;
             
         case MSG_STYLE::REQU:
             if (ext.empty()) {
                 oss << MAGENTA_BOLD << "? " << WHITE_BOLD << msg << ": " << MAGENTA_BOLD;
-                if (logger) logger->info("?" + msg + ": ");
                 __LAST_COLOR = MAGENTA_BOLD;
             }
             else {
                 oss << MAGENTA_BOLD << msg << " " << WHITE_BOLD << ext << RESET << std::endl;
-                if (logger) logger->info(msg + " " + ext + "\n");
                 __LAST_COLOR = RESET;
             }
             
             break;
             
-        case MSG_STYLE::ERROR:
+        case MSG_STYLE::M_ERROR:
             oss << RED_BOLD << "! " << msg << "." << RESET << std::endl;
-            if (logger) logger->info("! " + msg + ".\n");
             __LAST_COLOR = RESET;
             
             break;
 
         case MSG_STYLE::USER:
             oss << BG_CYAN_BOLD << BLACK << ' ' << SESSION::aircraft.tailnum << ' ' << RESET << CYAN_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(" " + SESSION::aircraft.tailnum + " : " + msg + "\n");
             break;
 
         case MSG_STYLE::USER_ALT:
             oss << BG_RED_BOLD << BLACK << ' ' << SESSION::aircraft.tailnum << ' ' << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(" " + SESSION::aircraft.tailnum + " : " + msg + "\n");
             break;
 
         case MSG_STYLE::XTALK:
             oss << BG_GREEN_BOLD << BLACK << SESSION::call_ID << RESET << GREEN_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(SESSION::call_ID + ": " + TOOLBOX::removeAnsiSq(msg) + "\n");
             break;
 
         case MSG_STYLE::XTALK_ALT:
             oss << BG_RED_BOLD << WHITE_BOLD << SESSION::call_ID << RESET << RED_BOLD << ": " << msg << RESET << std::endl;
-            if (logger) logger->info(SESSION::call_ID + ": " + msg);
             break;
 
         case MSG_STYLE::BLINK_BEGIN:
@@ -186,7 +158,7 @@ std::string OUT::xprint(MSG_STYLE style, std::string msg, std::string ext, log4c
     return oss.str();
 }
 
-void OUT::OUT::xprintbox(BOX_STYLE style, std::string text, std::string bcolor, std::string tcolor) {
+void X_OUTPUT::X_OUTPUT::xprintbox(BOX_STYLE style, std::string text, std::string bcolor, std::string tcolor) {
     if (style == BOX_STYLE::DOUBLE) {
         std::cout << bcolor << TL_DOUBLE;
         for (size_t i = 0; i < text.size() + 2; ++i) {

@@ -5,7 +5,6 @@
 #include <aircraft.h>
 #include <reqrsp.h>
 #include <speaker.h>
-#include <vosk_api.h>
 
 class ZMQ_Client;
 class ZMQ_Server;

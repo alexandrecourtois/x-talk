@@ -1,6 +1,5 @@
 #pragma once
 
-#include <log4cpp/Category.hh>
 #include <pch.h>
 #include <tools.h>
 #include <msg.h>
@@ -65,11 +64,11 @@
 #define H_DOUBLE  "═"  // Horizontal Line
 #define V_DOUBLE  "║"  // Vertical Line
 
-class OUT {
+class X_OUTPUT {
     private:
         static std::string __LAST_COLOR;
 
-        OUT() = default;
+        X_OUTPUT() = default;
 
     public:
         enum class BOX_STYLE {
@@ -78,8 +77,8 @@ class OUT {
         };
 
         static const std::string& get_LAST_COLOR();
-        static std::string xprint(MSG_STYLE style = MSG_STYLE::DEFAULT, std::string msg = "", std::string ext = "", log4cpp::Category* logger = xlog);
+        static std::string xprint(MSG_STYLE style = MSG_STYLE::DEFAULT, std::string msg = "", std::string ext = "");
         static void xprintbox(BOX_STYLE style, std::string text, std::string bcolor = WHITE, std::string tcolor = WHITE);
 
-        friend class IN;
+        friend class X_INPUT;
 };

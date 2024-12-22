@@ -1,10 +1,8 @@
 #include <exception>
+#include <string>
 #include <tools.h>
 #include <xprint.h>
 #include <inputs.h>
-
-log4cpp::Appender *logfile;
-log4cpp::Category *xlog;
 
 std::string TOOLBOX::removeQuotes(std::string str) {
     str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
@@ -26,20 +24,23 @@ int TOOLBOX::selectById(int count_id) {
     int index;
     
     while(!selected) {
-        OUT::xprint(MSG_STYLE::REQU, "Select one device by ID");
+        X_OUTPUT::xprint(MSG_STYLE::REQU, "Select one device by ID");
         
         std::string indexStr;
         std::optional<int> result;
                 
         do {
-            IN::xscan(indexStr);
+            //X_INPUT::xscan(indexStr);
+            X_INPUT::enableInput();
+            std::getline(std::cin, indexStr);
             result = toInt(indexStr);
+            X_INPUT::disableInput();
         } while(!result);
                 
         index = *result;
 
         if (index < 0 || index >= count_id) {
-            OUT::xprint(MSG_STYLE::ERROR, "Invalid ID");
+            X_OUTPUT::xprint(MSG_STYLE::M_ERROR, "Invalid ID");
         }
         else
         {
@@ -92,7 +93,7 @@ void TOOLBOX::displayProgressBar(const std::string& msg, int current, int total)
     int pos = barWidth * progress;
     
     std::cout << '\r';
-    OUT::xprint(MSG_STYLE::INIT, msg, "", nullptr);
+    X_OUTPUT::xprint(MSG_STYLE::INIT, msg, "");
     std::cout << " [";
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) std::cout << "=";
@@ -164,7 +165,7 @@ std::string TOOLBOX::removeSubstring(const std::string& str, const std::string& 
 }
 
 double TOOLBOX::toRad(double degree) {
-    return degree * M_PI / 180.0;
+    return degree * 3.14159 / 180.0;
 }
 
 // Fonction pour calculer la distance entre deux points en latitude et longitude
@@ -200,7 +201,7 @@ nlohmann::json TOOLBOX::loadJSON(const std::string& filename) {
         file >> data;
         return data;
     } catch(const std::exception& e) {
-        OUT::xprint(MSG_STYLE::ERROR, e.what());
+        X_OUTPUT::xprint(MSG_STYLE::M_ERROR, e.what());
         exit(1);
     }
 }
@@ -248,7 +249,6 @@ int TOOLBOX::getLevenshteinDistance_alt(const std::string &str1, const std::stri
     size_t s2_size = str2.size();
     unsigned int i;
     unsigned int j;
-    int s;
 
     if (s1_size && s2_size) {
         int d[s1_size + 1][s2_size + 1];
@@ -261,6 +261,8 @@ int TOOLBOX::getLevenshteinDistance_alt(const std::string &str1, const std::stri
 
         for(j = 1; j <= s2_size; ++j)
             for(i = 1; i <= s1_size; ++i) {
+                int s;
+
                 if (str1[i] == str2[j])
                     s = 0;
                 else

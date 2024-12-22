@@ -2,9 +2,6 @@
 
 #include <pch.h>
 
-extern log4cpp::Appender *logfile;
-extern log4cpp::Category *xlog;
-
 class TOOLBOX {
     private:
         TOOLBOX() = default;

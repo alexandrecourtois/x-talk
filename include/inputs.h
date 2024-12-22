@@ -2,17 +2,19 @@
 
 #include <pch.h>
 
-class IN {
+class X_INPUT {
     private:
+//#ifdef PLATFORM_LINUX
         static struct termios   __old_term;
         static struct termios   __new_term;
+//#endif // PLATFORM_LINUX
         static int              __prev_ptt_state;
         static std::string      __garbage;
         static int              __ptt_button;
         static SDL_Joystick*    __joystick;
 
 
-        IN() = default;
+        X_INPUT() = default;
 
         static bool __isUtf8Character(const std::string& str);
         static bool __isLastCharacterASCII(const std::string& str);

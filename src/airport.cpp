@@ -7,11 +7,11 @@
 #include <lang.h>
 
 void AIRPORTS::loadAiports(const std::string& filename) {
-    OUT::xprint(MSG_STYLE::INIT, lang(MSG::LOADING_AIRPORTS), filename);
+    X_OUTPUT::xprint(MSG_STYLE::INIT, lang(T_MSG::LOADING_AIRPORTS), filename);
     
     __airports = TOOLBOX::loadJSON(filename);
     
-    OUT::xprint(MSG_STYLE::DONE, std::to_string(__airports.size()) + " " + lang(MSG::AIRPORTS_FOUND));
+    X_OUTPUT::xprint(MSG_STYLE::DONE, std::to_string(__airports.size()) + " " + lang(T_MSG::AIRPORTS_FOUND));
 }
 
 bool AIRPORTS::isSupportedAirport() {

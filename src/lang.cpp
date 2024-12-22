@@ -1,7 +1,7 @@
 #include <msg.h>
 #include <lang.h>
 
-const std::string& lang(MSG msg) {
+const std::string& lang(T_MSG msg) {
 	return Lang::getString(msg);
 }
 
@@ -13,11 +13,11 @@ Lang::Lang(const std::string& lname) {
 Lang::~Lang() {
 }
 
-void Lang::setString(MSG msg, std::string str) {
+void Lang::setString(T_MSG msg, std::string str) {
 	_sentences[msg] = str;
 }
 
-std::string& Lang::getString(MSG msg) {
+std::string& Lang::getString(T_MSG msg) {
 	return _sentences[msg];
 }
 
@@ -25,5 +25,5 @@ std::string Lang::getLang() {
 	return _lname;
 }
 
-std::map<MSG, std::string> Lang::_sentences = { { MSG::EMPTY, "" } };
+std::map<T_MSG, std::string> Lang::_sentences = { { T_MSG::EMPTY, "" } };
 std::string Lang::_lname = "";
